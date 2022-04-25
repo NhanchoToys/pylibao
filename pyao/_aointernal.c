@@ -4,9 +4,7 @@
 #include <string.h>
 #include <ao/ao.h>
 #define BUF_SIZE 4096
-
-// AO Device Descriptor
-ao_device** aodd = NULL;
+#define AO_DEVICE_SIZE 84
 
 static PyObject* pyao_init(PyObject* self) {
     ao_initialize();
@@ -28,43 +26,41 @@ static PyObject* pyao_open_live(PyObject* self, PyObject* args, PyObject* kwargs
     ao_device* device;
     ao_sample_format aofmt;
     memset(&aofmt, 0, sizeof(aofmt));
-    PyObject pyfmt;
+    PyObject* pyfmt;
 
     static char* argsname[] = {"default_driver", "format", NULL};
     if (!PyArg_ParseTupleAndKeywords(
-                args, kwargs, "id:pyao_open_live", argsname,
-                &drvid, &pyfmt
+                args, kwargs, "iO:pyao_open_live", argsname,
+                &drvid, pyfmt
                 ))
         return NULL;
 
     // pick objects from dict
-    PyObject* bits = PyDict_GetItemString(&pyfmt, "bits");
-    PyObject* channels = PyDict_GetItemString(&pyfmt, "channels");
-    PyObject* rate = PyDict_GetItemString(&pyfmt, "bitrate");
-    PyObject* byte_format = PyDict_GetItemString(&pyfmt, "byte_format");
+    PyObject* bits = PyDict_GetItemString(pyfmt, "bits");
+    PyObject* channels = PyDict_GetItemString(pyfmt, "channels");
+    PyObject* rate = PyDict_GetItemString(pyfmt, "bitrate");
+    PyObject* byte_format = PyDict_GetItemString(pyfmt, "byte_format");
     // PyObject* matrix = PyDict_GetItemString(&pyfmt, "matrix");
 
-    aofmt.bits = _PyLong_AsInt(bits);
-    aofmt.channels = _PyLong_AsInt(channels);
-    aofmt.rate = _PyLong_AsInt(rate);
-    aofmt.byte_format = _PyLong_AsInt(byte_format);
-    // aofmt.matrix = PyUnicode_AsString(matrix);
+    aofmt.bits = (int)PyLong_AsLong(bits);
+    aofmt.channels = (int)PyLong_AsLong(channels);
+    aofmt.rate = (int)PyLong_AsLong(rate);
+    aofmt.byte_format = (int)PyLong_AsLong(byte_format);
+    aofmt.matrix = "L,R";
 
     device = ao_open_live(drvid, &aofmt, NULL);
     if (device == NULL) {
         PyErr_SetString(PyExc_OSError, "Unable to open an audio device");
         return NULL;
     }
-    int index = sizeof(aodd);
-    aodd = (ao_device**)realloc(aodd, sizeof(ao_device*) * (index + 1));
-    return Py_BuildValue("i", index);
+    return Py_BuildValue("b#", (char*)(device), AO_DEVICE_SIZE);
 }
 
 static PyObject* pyao_close(PyObject* self, PyObject* args) {
-    int descriptor;
-    if (!PyArg_ParseTuple(args, "i:pyao_close", &descriptor))
+    char* session;
+    if (!PyArg_ParseTuple(args, "b:pyao_close", session))
         return NULL;
-    int code = ao_close(aodd[descriptor]);
+    int code = ao_close((ao_device*)session);
     return Py_BuildValue("i", code);
 }
 
