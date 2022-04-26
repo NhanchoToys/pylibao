@@ -28,7 +28,7 @@ static PyObject* pyao_open_live(PyObject* self, PyObject* args, PyObject* kwargs
     memset(&aofmt, 0, sizeof(aofmt));
     PyObject* pyfmt;
 
-    static char* argsname[] = {"default_driver", "bits", "chs", "rate", "bfmt", "matrix", NULL};
+    static char* argsname[] = {"driver", "bits", "chs", "rate", "bfmt", "matrix", NULL};
     if (!PyArg_ParseTupleAndKeywords(
                 args, kwargs, "iiiiis:pyao_open_live", argsname,
                 &drvid, &aofmt.bits, &aofmt.channels, &aofmt.rate, &pyfmt, &aofmt.matrix
@@ -36,6 +36,29 @@ static PyObject* pyao_open_live(PyObject* self, PyObject* args, PyObject* kwargs
         return NULL;
 
     device = ao_open_live(drvid, &aofmt, NULL);
+    if (device == NULL) {
+        PyErr_SetString(PyExc_OSError, "Unable to open an audio device");
+        return NULL;
+    }
+    return Py_BuildValue("y#", (char*)(device), AO_DEVICE_SIZE);
+}
+
+static PyObject* pyao_open_file(PyObject* self, PyObject* args, PyObject* kwargs) {
+    int drvid, ow = 0;
+    ao_device* device;
+    ao_sample_format aofmt;
+    memset(&aofmt, 0, sizeof(aofmt));
+    PyObject* pyfmt;
+    char* filename;
+
+    static char* argsname[] = {"driver", "filename", "bits", "chs", "rate", "bfmt", "matrix", "overwrite", NULL};
+    if (!PyArg_ParseTupleAndKeywords(
+                args, kwargs, "isiiiisi:pyao_open_file", argsname,
+                &drvid, &filename, &aofmt.bits, &aofmt.channels, &aofmt.rate, &pyfmt, &aofmt.matrix, &ow
+                ))
+        return NULL;
+
+    device = ao_open_file(drvid, filename, ow, &aofmt, NULL);
     if (device == NULL) {
         PyErr_SetString(PyExc_OSError, "Unable to open an audio device");
         return NULL;
@@ -55,24 +78,28 @@ static PyObject* pyao_close(PyObject* self, PyObject* args) {
 }
 
 static PyObject* pyao_play(PyObject* self, PyObject* args, PyObject* kwargs) {
-    PyObject* device, bytes;
+    PyObject* device;
+    char* bytes;
     uint_32 size;
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO#:pyao_play", device, bytes, &size))
+
+    static char* argsname[] = {"device", "data", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Oy#:pyao_play", argsname, device, bytes, &size))
         return NULL;
 
     ao_device* _device = (ao_device*)malloc(AO_DEVICE_SIZE);
     memcpy(_device, PyBytes_AsString(device), AO_DEVICE_SIZE);
-    int code = ao_play(_device, PyBytes_AsString(bytes), BUF_SIZE);
+    int code = ao_play(_device, bytes, size);
     return Py_BuildValue("i", code);
 }
 
 static PyMethodDef _methods[] = {
-    {"pyao_init",               (PyCFunction)pyao_init,                 METH_NOARGS,                    "Initialize the audio library."},
-    {"pyao_shutdown",           (PyCFunction)pyao_shutdown,             METH_NOARGS,                    "Shutdown the audio library."},
-    {"pyao_default_driver_id",  (PyCFunction)pyao_default_driver_id,    METH_NOARGS,                    "Get the default audio driver ID."},
-    {"pyao_open_live",          (PyCFunction)pyao_open_live,            METH_VARARGS | METH_KEYWORDS,   "Open an audio device for live playback."},
-    {"pyao_close",              (PyCFunction)pyao_close,                METH_VARARGS,                   "Close an audio device."},
-    {"pyao_play",               (PyCFunction)pyao_play,                 METH_VARARGS | METH_KEYWORDS,   "Play a buffer on an audio device."},
+    {"pyao_init",               (PyCFunction)pyao_init,                 METH_NOARGS,                    "pyao_init()\n--\n\nInitialize the audio library."},
+    {"pyao_shutdown",           (PyCFunction)pyao_shutdown,             METH_NOARGS,                    "pyao_shutdown()\n--\n\nShutdown the audio library."},
+    {"pyao_default_driver_id",  (PyCFunction)pyao_default_driver_id,    METH_NOARGS,                    "pyao_default_driver_id()\n--\n\nGet the default audio driver ID."},
+    {"pyao_open_live",          (PyCFunction)pyao_open_live,            METH_VARARGS | METH_KEYWORDS,   "pyao_open_live(driver, bits, chs, rate, bfmt, matrix)\n--\n\nOpen an audio device for live playback."},
+    {"pyao_open_file",          (PyCFunction)pyao_open_file,            METH_VARARGS | METH_KEYWORDS,   "pyao_open_file(driver, filename, bits, chs, rate, bfmt, matrix, overwrite)\n--\n\nOpen an audio device for file playback."},
+    {"pyao_close",              (PyCFunction)pyao_close,                METH_VARARGS,                   "pyao_close(device)\n--\n\nClose an audio device."},
+    {"pyao_play",               (PyCFunction)pyao_play,                 METH_VARARGS | METH_KEYWORDS,   "pyao_play(device, data)\n--\n\nPlay a buffer on an audio device."},
     {NULL,                      NULL,                                   0,                              NULL}
 };
 
