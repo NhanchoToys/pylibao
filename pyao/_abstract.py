@@ -43,7 +43,7 @@ def pyao_open_live(
     rate: int,
     bfmt: int,
     matrix: str
-) -> bytes:
+) -> int:
     """
     Open a live audio stream.
 
@@ -54,7 +54,7 @@ def pyao_open_live(
     :param bfmt: The byte format.
     :param matrix: The channel matrix.
 
-    :return: The audio device bytes.
+    :return: The audio device descriptor.
     """
     return _aointernal.pyao_open_live(driver, bits, chs, rate, bfmt, matrix)
 
@@ -68,7 +68,7 @@ def pyao_open_file(
     bfmt: int,
     matrix: str,
     overwrite: int
-) -> bytes:
+) -> int:
     """
     Open a file audio stream.
 
@@ -81,27 +81,27 @@ def pyao_open_file(
     :param matrix: The channel matrix.
     :param overwrite: Overwrite the file if it exists.
 
-    :return: The audio device bytes.
+    :return: The audio device descriptor.
     """
     return _aointernal.pyao_open_file(driver, file, bits, chs, rate, bfmt, matrix, overwrite)
 
 
-def pyao_close(stream: bytes) -> int:
+def pyao_close(stream: int) -> int:
     """
     Close an audio stream.
 
-    :param stream: The audio device bytes.
+    :param stream: The audio device descriptor.
 
     :return: Status code.
     """
     return _aointernal.pyao_close(stream)
 
 
-def pyao_play(stream: bytes, data: bytes) -> int:
+def pyao_play(stream: int, data: bytes) -> int:
     """
     Play audio data.
 
-    :param stream: The audio device bytes.
+    :param stream: The audio device descriptor.
     :param data: The audio data.
 
     :return: Status code.
@@ -113,9 +113,9 @@ class AODevice:
     """
     An abstract object to mark ao_device
     """
-    def __init__(self, st: bytes):
+    def __init__(self, st: int):
         """
-        :param st: The audio device bytes.
+        :param st: The audio device descriptor.
         """
         self._struct = st
 

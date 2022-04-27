@@ -3,8 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ao/ao.h>
-#define BUF_SIZE 4096
+
 #define AO_DEVICE_SIZE 84
+
+// ao_device descriptor
+ao_device **ao_device_list = NULL;
+int ao_device_count = 0;
 
 static PyObject* pyao_init(PyObject* self) {
     ao_initialize();
@@ -19,6 +23,15 @@ static PyObject* pyao_shutdown(PyObject* self) {
 static PyObject* pyao_default_driver_id(PyObject* self) {
     int drvid = ao_default_driver_id();
     return Py_BuildValue("i", drvid);
+}
+
+int add_ao_device(ao_device *device) {
+    if (device == NULL) {
+        return -1;
+    }
+    ao_device_list = (ao_device **)realloc(ao_device_list, AO_DEVICE_SIZE * (ao_device_count + 1));
+    ao_device_list[ao_device_count] = device;
+    return ao_device_count++;
 }
 
 static PyObject* pyao_open_live(PyObject* self, PyObject* args, PyObject* kwargs) {
@@ -40,7 +53,8 @@ static PyObject* pyao_open_live(PyObject* self, PyObject* args, PyObject* kwargs
         PyErr_SetString(PyExc_OSError, "Unable to open an audio device");
         return NULL;
     }
-    return Py_BuildValue("y#", (char*)(device), AO_DEVICE_SIZE);
+    int d_index = add_ao_device(device);
+    return Py_BuildValue("i", d_index);
 }
 
 static PyObject* pyao_open_file(PyObject* self, PyObject* args, PyObject* kwargs) {
@@ -63,31 +77,30 @@ static PyObject* pyao_open_file(PyObject* self, PyObject* args, PyObject* kwargs
         PyErr_SetString(PyExc_OSError, "Unable to open an audio device");
         return NULL;
     }
-    return Py_BuildValue("y#", (char*)(device), AO_DEVICE_SIZE);
+    int d_index = add_ao_device(device);
+    return Py_BuildValue("i", d_index);
 }
 
 static PyObject* pyao_close(PyObject* self, PyObject* args) {
-    PyObject* bytes;
-    if (!PyArg_ParseTuple(args, "O:pyao_close", bytes))
+    int d_index;
+    if (!PyArg_ParseTuple(args, "i:pyao_close", &d_index))
         return NULL;
 
-    ao_device* device = (ao_device*)malloc(AO_DEVICE_SIZE);
-    memcpy(device, PyBytes_AsString(bytes), AO_DEVICE_SIZE);
+    ao_device* device = ao_device_list[d_index];
     int code = ao_close(device);
     return Py_BuildValue("i", code);
 }
 
 static PyObject* pyao_play(PyObject* self, PyObject* args, PyObject* kwargs) {
-    PyObject* device;
+    int device;
     char* bytes;
     uint_32 size;
 
     static char* argsname[] = {"device", "data", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Oy#:pyao_play", argsname, device, bytes, &size))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "iy#:pyao_play", argsname, &device, bytes, &size))
         return NULL;
 
-    ao_device* _device = (ao_device*)malloc(AO_DEVICE_SIZE);
-    memcpy(_device, PyBytes_AsString(device), AO_DEVICE_SIZE);
+    ao_device* _device = ao_device_list[device];
     int code = ao_play(_device, bytes, size);
     return Py_BuildValue("i", code);
 }
