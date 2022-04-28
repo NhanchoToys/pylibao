@@ -8,26 +8,26 @@
 ao_device **ao_device_list = NULL;
 int ao_device_count = 0;
 
+// initialize
 static PyObject* pyao_init(PyObject* self) {
-    // initialize
     ao_initialize();
     Py_RETURN_NONE;
 }
 
+// shutdown
 static PyObject* pyao_shutdown(PyObject* self) {
-    // shutdown
     ao_shutdown();
     Py_RETURN_NONE;
 }
 
+// get default driver ID
 static PyObject* pyao_default_driver_id(PyObject* self) {
-    // get default driver ID
     int drvid = ao_default_driver_id();
     return Py_BuildValue("i", drvid);
 }
 
+// add device into device list
 int add_ao_device(ao_device *device) {
-    // add device into device list
     if (device == NULL) {
         return -1;
     }
@@ -107,6 +107,51 @@ static PyObject* pyao_play(PyObject* self, PyObject* args, PyObject* kwargs) {
     return Py_BuildValue("i", code);
 }
 
+// directly play data to driver
+static PyObject* pyao_fast_play(PyObject* self, PyObject* args, PyObject* kwargs) {
+    int drvid;
+    char* bytes;
+    uint_32 size;
+    ao_sample_format aofmt;
+    memset(&aofmt, 0, sizeof(aofmt));
+
+    static char* argsname[] = {"driver", "bits", "chs", "rate", "bfmt", "matrix", "data", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "iiiiisy#:pyao_fast_play", argsname, &drvid, &aofmt.bits, &aofmt.channels, &aofmt.rate, &aofmt.byte_format, aofmt.matrix, bytes, &size))
+        return NULL;
+    
+    ao_device* device = ao_open_live(drvid, &aofmt, NULL);
+    if (device == NULL) {
+        PyErr_SetString(PyExc_OSError, "Unable to open an audio device");
+        return NULL;
+    }
+    int code = ao_play(device, bytes, size);
+    ao_close(device);
+    return Py_BuildValue("i", code);
+}
+
+// directly play data into a file
+static PyObject* pyao_fast_play_file(PyObject* self, PyObject* args, PyObject* kwargs) {
+    int drvid, ow = 0;
+    char* filename;
+    char* bytes;
+    uint_32 size;
+    ao_sample_format aofmt;
+    memset(&aofmt, 0, sizeof(aofmt));
+
+    static char* argsname[] = {"driver", "filename", "ow", "bits", "chs", "rate", "bfmt", "matrix", "data", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "isiiiiisy#:pyao_fast_play_file", argsname, &drvid, &filename, &ow, &aofmt.bits, &aofmt.channels, &aofmt.rate, &aofmt.byte_format, aofmt.matrix, bytes, &size))
+        return NULL;
+    
+    ao_device* device = ao_open_file(drvid, filename, ow, &aofmt, NULL);
+    if (device == NULL) {
+        PyErr_SetString(PyExc_OSError, "Unable to open an audio device");
+        return NULL;
+    }
+    int code = ao_play(device, bytes, size);
+    ao_close(device);
+    return Py_BuildValue("i", code);
+}
+
 static PyMethodDef _methods[] = {
     {"pyao_init",               (PyCFunction)pyao_init,                 METH_NOARGS,                    "pyao_init()\n--\n\nInitialize the audio library."},
     {"pyao_shutdown",           (PyCFunction)pyao_shutdown,             METH_NOARGS,                    "pyao_shutdown()\n--\n\nShutdown the audio library."},
@@ -115,6 +160,8 @@ static PyMethodDef _methods[] = {
     {"pyao_open_file",          (PyCFunction)pyao_open_file,            METH_VARARGS | METH_KEYWORDS,   "pyao_open_file(driver, filename, bits, chs, rate, bfmt, matrix, overwrite)\n--\n\nOpen an audio device for file playback."},
     {"pyao_close",              (PyCFunction)pyao_close,                METH_VARARGS,                   "pyao_close(device)\n--\n\nClose an audio device."},
     {"pyao_play",               (PyCFunction)pyao_play,                 METH_VARARGS | METH_KEYWORDS,   "pyao_play(device, data)\n--\n\nPlay a buffer on an audio device."},
+    {"pyao_fast_play",          (PyCFunction)pyao_fast_play,            METH_VARARGS | METH_KEYWORDS,   "pyao_fast_play(driver, bits, chs, rate, bfmt, matrix, data)\n--\n\nPlay a buffer on an audio driver."},
+    {"pyao_fast_play_file",     (PyCFunction)pyao_fast_play_file,       METH_VARARGS | METH_KEYWORDS,   "pyao_fast_play_file(driver, filename, ow, bits, chs, rate, bfmt, matrix, data)\n--\n\nPlay a buffer into a file on an audio driver."},
     {NULL,                      NULL,                                   0,                              NULL}
 };
 
