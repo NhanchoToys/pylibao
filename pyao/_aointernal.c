@@ -4,32 +4,34 @@
 #include <string.h>
 #include <ao/ao.h>
 
-#define AO_DEVICE_SIZE 84
-
 // ao_device descriptor
 ao_device **ao_device_list = NULL;
 int ao_device_count = 0;
 
 static PyObject* pyao_init(PyObject* self) {
+    // initialize
     ao_initialize();
     Py_RETURN_NONE;
 }
 
 static PyObject* pyao_shutdown(PyObject* self) {
+    // shutdown
     ao_shutdown();
     Py_RETURN_NONE;
 }
 
 static PyObject* pyao_default_driver_id(PyObject* self) {
+    // get default driver ID
     int drvid = ao_default_driver_id();
     return Py_BuildValue("i", drvid);
 }
 
 int add_ao_device(ao_device *device) {
+    // add device into device list
     if (device == NULL) {
         return -1;
     }
-    ao_device_list = (ao_device **)realloc(ao_device_list, AO_DEVICE_SIZE * (ao_device_count + 1));
+    ao_device_list = (ao_device **)realloc(ao_device_list, sizeof(ao_device*) * (ao_device_count + 1));
     ao_device_list[ao_device_count] = device;
     return ao_device_count++;
 }
