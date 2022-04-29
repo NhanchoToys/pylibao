@@ -6,8 +6,8 @@ import pyao
 
 pyao.pyao_init()
 
-for _ in range(1000):
-    pyao.AO.fast_play(
+for _ in range(100):
+    pyao.fast.FastPlay.sine(
         pyao.default_driver_id(),
         pyao.AOFormat(
             bits=16,
@@ -16,7 +16,9 @@ for _ in range(1000):
             byte_format=pyao.AO_FMT_NATIVE,
             mat="L,R"
         ),
-        b"\x00\x00\x00\x00\xff\xff\xff\xff" * 200
+        440,
+        0.75,
+        1
     )
 
 pyao.pyao_shutdown()

@@ -3,7 +3,6 @@ An abstract interface for libao.
 """
 
 from dataclasses import dataclass
-from re import I
 from typing import Optional
 from pyao import _aointernal
 
