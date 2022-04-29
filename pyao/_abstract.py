@@ -109,49 +109,41 @@ def pyao_play(stream: int, data: bytes) -> int:
     return _aointernal.pyao_play(stream, data)
 
 
-def pyao_fast_play(driver: int, bits: int, chs: int, rate: int, bfmt: int, matrix: str, data: bytes) -> int:
-    """
-    Play a buffer on an audio driver.
-
-    :param driver: The audio driver ID.
-    :param bits: The number of bits per sample.
-    :param chs: The number of channels.
-    :param rate: The sample rate.
-    :param bfmt: The byte format.
-    :param matrix: The channel matrix.
-    :param data: The audio data.
-
-    :return: Status code.
-    """
-    return _aointernal.pyao_fast_play(driver, bits, chs, rate, bfmt, matrix, data)
-
-
-def pyao_fast_play_file(
-    driver: int,
-    file: str,
-    overwrite: int,
+def pyao_fast_play_init(
     bits: int,
     chs: int,
     rate: int,
     bfmt: int,
-    matrix: str,
-    data: bytes
-) -> int:
+    matrix: str
+) -> None:
     """
-    Play a file on an audio driver.
+    Initialize a fast playback device.
 
-    :param driver: The audio driver ID.
-    :param file: The file path.
-    :param overwrite: Overwrite the file if it exists.
     :param bits: The number of bits per sample.
     :param chs: The number of channels.
     :param rate: The sample rate.
     :param bfmt: The byte format.
     :param matrix: The channel matrix.
+    """
+    return _aointernal.pyao_fast_play_init(bits, chs, rate, bfmt, matrix)
+
+
+def pyao_fast_play_close() -> None:
+    """
+    Close a fast playback device.
+    """
+    _aointernal.pyao_fast_play_close()
+
+
+def pyao_fast_play(data: bytes) -> int:
+    """
+    Play a buffer on a fast playback device.
+
+    :param data: The audio data.
 
     :return: Status code.
     """
-    return _aointernal.pyao_fast_play_file(driver, file, overwrite, bits, chs, rate, bfmt, matrix, data)
+    return _aointernal.pyao_fast_play(data)
 
 
 class AODevice:
@@ -245,47 +237,3 @@ class AO:
         return AODevice(pyao_open_file(
             driver, file, format.bits, format.channels, format.rate, format.byte_format, format.mat, int(overwrite)
         ))
-
-    @staticmethod
-    def fast_play(
-        driver: Optional[int] = None,
-        format: Optional[AOFormat] = None,
-        data: Optional[bytes] = None
-    ) -> int:
-        """
-        Play a buffer on an audio driver.
-        """
-        if driver is None:
-            driver = pyao_default_driver_id()
-        if format is None:
-            format = AOFormat(16, 44100, 2, AO_FMT_NATIVE, "L,R")
-        if data is None:
-            raise ValueError("No data specified.")
-        return pyao_fast_play(
-            driver, format.bits, format.channels, format.rate, format.byte_format, format.mat, data
-        )
-
-    @staticmethod
-    def fast_play_file(
-        driver: Optional[int] = None,
-        file: Optional[str] = None,
-        overwrite: Optional[bool] = False,
-        format: Optional[AOFormat] = None,
-        data: Optional[bytes] = None
-    ) -> int:
-        """
-        Play a file on an audio driver.
-        """
-        if driver is None:
-            driver = pyao_default_driver_id()
-        if format is None:
-            format = AOFormat(16, 44100, 2, AO_FMT_NATIVE, "L,R")
-        if file is None:
-            raise ValueError("No file specified.")
-        if overwrite is None:
-            overwrite = False
-        if data is None:
-            raise ValueError("No data specified.")
-        return pyao_fast_play_file(
-            driver, file, int(overwrite), format.bits, format.channels, format.rate, format.byte_format, format.mat, data
-        )

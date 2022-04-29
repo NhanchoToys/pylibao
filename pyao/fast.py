@@ -4,53 +4,119 @@ A set of small tools to make some simple sounds conveniently.
 
 __all__ = [
     'FastPlay',
-    'playbytes',
-    'play2file',
+    'fast_play_init',
+    'fast_play',
+    'fast_play_close',
     'fast_play_sine',
+    'fast_play_square',
 ]
 
 from math import pi, sin
 
 from pyao._abstract import (
     AOFormat,
-    AO
 )
 
-from pyao._aointernal import pyao_fast_play_sine
+from pyao._aointernal import (
+    pyao_fast_play_init,
+    pyao_fast_play,
+    pyao_fast_play_sine,
+    pyao_fast_play_square,
+    pyao_fast_play_close,
+)
 
-playbytes = AO.fast_play
-play2file = AO.fast_play_file
+
+def fast_play_init(ao_format: AOFormat) -> None:
+    """
+    Initialize the fast play library.
+
+    :param ao_format: The audio format.
+    """
+    pyao_fast_play_init(ao_format.bits, ao_format.channels, ao_format.rate, ao_format.byte_format, ao_format.mat)
 
 
-def fast_play_sine(driver: int, freq: float = 440.0, duration: float = 1.0, volume: float = 1.0):
+def fast_play(data: bytes) -> int:
+    """
+    Play the given data.
+
+    :return: Status code.
+    """
+    return pyao_fast_play(data)
+
+
+def fast_play_sine(freq: float = 440.0, duration: float = 1.0, volume: float = 1.0):
     """
     Play a sine wave with the given frequency, duration and volume.
     """
-    pyao_fast_play_sine(driver, freq, duration, volume)
+    pyao_fast_play_sine(freq, duration, volume)
+
+
+def fast_play_square(freq: float = 440.0, duration: float = 1.0, volume: float = 1.0):
+    """
+    Play a square wave with the given frequency, duration and volume.
+    """
+    pyao_fast_play_square(freq, duration, volume)
+
+
+def fast_play_close() -> None:
+    """
+    Close the fast play library.
+    """
+    pyao_fast_play_close()
 
 
 class FastPlay:
     """
     Provides a set of methods to play some simple sounds.
     """
-    @staticmethod
-    def sine(drv: int, fmt: AOFormat, freq: float, volume: float, duration: float):
+    def __init__(self, ao_format: AOFormat):
         """
-        Generates a sine wave.
-        """
-        size = int(fmt.rate * duration)
-        buffer = bytearray(size)
-        for i in range(size):
-            buffer[i] = int(volume * sin(2 * pi * freq * i / fmt.rate))
-        return playbytes(drv, fmt, bytes(buffer))
+        Initialize the FastPlay class.
 
-    @staticmethod
-    def square(drv: int, fmt: AOFormat, freq: float, volume: float, duration: float):
+        :param ao_format: The audio format.
         """
-        Generates a square wave.
+        fast_play_init(ao_format)
+
+    def __del__(self):
         """
-        size = int(fmt.rate * duration)
-        buffer = bytearray(size)
-        for i in range(size):
-            buffer[i] = int(volume * (sin(2 * pi * freq * i / fmt.rate) > 0))
-        return playbytes(drv, fmt, bytes(buffer))
+        Close the FastPlay class.
+        """
+        fast_play_close()
+
+    def __enter__(self):
+        """
+        Enter the with statement.
+        """
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Exit the with statement.
+        """
+        fast_play_close()
+
+    def play(self, data: bytes) -> int:
+        """
+        Play the given data.
+
+        :return: Status code.
+        """
+        return fast_play(data)
+
+    def play_sine(self, freq: float = 440.0, duration: float = 1.0, volume: float = 1.0):
+        """
+        Play a sine wave with the given frequency, duration and volume.
+        """
+        fast_play_sine(freq, duration, volume)
+
+    def play_square(self, freq: float = 440.0, duration: float = 1.0, volume: float = 1.0):
+        """
+        Play a square wave with the given frequency, duration and volume.
+        """
+        fast_play_square(freq, duration, volume)
+
+    def close(self) -> None:
+        """
+        Close the FastPlay class.
+        """
+        fast_play_close()

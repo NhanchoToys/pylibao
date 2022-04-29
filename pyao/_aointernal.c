@@ -103,7 +103,7 @@ static PyObject* pyao_play(PyObject* self, PyObject* args, PyObject* kwargs) {
     uint_32 size;
 
     static char* argsname[] = {"device", "data", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "iy#:pyao_play", argsname, &device, bytes, &size))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "iy#:pyao_play", argsname, &device, &bytes, &size))
         return NULL;
 
     ao_device* _device = ao_device_list[device];
@@ -112,73 +112,51 @@ static PyObject* pyao_play(PyObject* self, PyObject* args, PyObject* kwargs) {
 }
 
 // initialize fast play device
-static PyObject* pyao_fast_play_init(PyObject* self) {
+static PyObject* pyao_fast_play_init(PyObject* self, PyObject* args, PyObject* kwargs) {
     ao_sample_format aofmt;
     memset(&aofmt, 0, sizeof(aofmt));
 
-    aofmt.bits = 16;
-    aofmt.channels = 2;
-    aofmt.rate = 44100;
-    aofmt.byte_format = AO_FMT_LITTLE;
+    static char* argsname[] = {"bits", "chs", "rate", "bfmt", "matrix", NULL};
+    if (!PyArg_ParseTupleAndKeywords(
+                args, kwargs, "iiiis:pyao_fast_play_init", argsname,
+                &aofmt.bits, &aofmt.channels, &aofmt.rate, &aofmt.byte_format, &aofmt.matrix
+                ))
+        return NULL;
 
-    fast_fmt = &aofmt
+    fast_fmt = &aofmt;
 
-    ao_device* ao_fastplay_dev = ao_open_live(ao_default_driver_id(), &aofmt, NULL);
+    ao_fastplay_dev = ao_open_live(ao_default_driver_id(), &aofmt, NULL);
     Py_RETURN_NONE;
 }
 
-// directly play data to driver
+// close fast play device
+static PyObject* pyao_fast_play_close(PyObject* self) {
+    ao_close(ao_fastplay_dev);
+    Py_RETURN_NONE;
+}
+
+// directly play data to fast play device
 static PyObject* pyao_fast_play(PyObject* self, PyObject* args, PyObject* kwargs) {
-    int drvid;
     char* bytes;
     uint_32 size;
-    ao_sample_format aofmt;
-    memset(&aofmt, 0, sizeof(aofmt));
-
-    static char* argsname[] = {"driver", "bits", "chs", "rate", "bfmt", "matrix", "data", NULL};
+    
+    static char* argsname[] = {"data", NULL};
     if (!PyArg_ParseTupleAndKeywords(
-                args, kwargs, "iiiiisy#:pyao_fast_play", argsname,
-                &drvid, &aofmt.bits, &aofmt.channels, &aofmt.rate, 
-                &aofmt.byte_format, &aofmt.matrix, bytes, &size))
+                args, kwargs, "y#:pyao_fast_play", argsname,
+                &bytes, &size))
         return NULL;
 
-    ao_device* device = ao_open_live(drvid, &aofmt, NULL);
+    ao_device* device = ao_fastplay_dev;
     if (device == NULL) {
         PyErr_SetString(PyExc_OSError, "Unable to open an audio device");
         return NULL;
     }
 
-    char* buf = (char*)malloc(size);
-    memcpy(buf, bytes, size);
-    int code = ao_play(device, buf, size);
-    ao_close(device);
-    free(buf);
+    int code = ao_play(device, bytes, size);
     return Py_BuildValue("i", 0);
 }
 
-// directly play data into a file
-static PyObject* pyao_fast_play_file(PyObject* self, PyObject* args, PyObject* kwargs) {
-    int drvid, ow = 0;
-    char* filename;
-    char* bytes;
-    uint_32 size;
-    ao_sample_format aofmt;
-    memset(&aofmt, 0, sizeof(aofmt));
-
-    static char* argsname[] = {"driver", "filename", "ow", "bits", "chs", "rate", "bfmt", "matrix", "data", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "isiiiiisy#:pyao_fast_play_file", argsname, &drvid, &filename, &ow, &aofmt.bits, &aofmt.channels, &aofmt.rate, &aofmt.byte_format, &aofmt.matrix, bytes, &size))
-        return NULL;
-    
-    ao_device* device = ao_open_file(drvid, filename, ow, &aofmt, NULL);
-    if (device == NULL) {
-        PyErr_SetString(PyExc_OSError, "Unable to open an audio device");
-        return NULL;
-    }
-    int code = ao_play(device, bytes, size);
-    ao_close(device);
-    return Py_BuildValue("i", code);
-}
-
+// fast play sine wave
 static PyObject* pyao_fast_play_sine(PyObject* self, PyObject* args, PyObject* kwargs) {
     double freq, volume, duration;
     static char* argsname[] = {
@@ -195,7 +173,7 @@ static PyObject* pyao_fast_play_sine(PyObject* self, PyObject* args, PyObject* k
         return NULL;
     }
 
-    ao_sample_format aofmt = *fast_fmt
+    ao_sample_format aofmt = *fast_fmt;
 
     uint32_t bufsize = aofmt.bits / 8 * aofmt.channels * aofmt.rate * duration;
     char* buf = (char*)calloc(bufsize, sizeof(char));
@@ -220,9 +198,56 @@ static PyObject* pyao_fast_play_sine(PyObject* self, PyObject* args, PyObject* k
         }
     }
 
-    int code = ao_play(device, buf, bufsize);
-    ao_close(device);
+    int code = ao_play(ao_fastplay_dev, buf, bufsize);
     free(buf);
+    return Py_BuildValue("i", code);
+}
+
+// fast play square wave
+static PyObject* pyao_fast_play_square(PyObject* self, PyObject* args, PyObject* kwargs) {
+    double freq, volume, duration;
+    static char* argsname[] = {
+        "freq", "volume", "duration", NULL // square
+    };
+    if (!PyArg_ParseTupleAndKeywords(
+        args, kwargs, "ddd:pyao_fast_play_square", argsname,
+        &freq, &volume, &duration
+    ))
+        return NULL;
+
+    if (ao_fastplay_dev == NULL) {
+        PyErr_SetString(PyExc_OSError, "Unable to open an audio device");
+        return NULL;
+    }
+
+    ao_sample_format aofmt = *fast_fmt;
+
+    uint32_t bufsize = aofmt.bits / 8 * aofmt.channels * aofmt.rate * duration;
+    char* buf = (char*)calloc(bufsize, sizeof(char));
+    if (buf == NULL) {
+        PyErr_SetString(PyExc_MemoryError, "Unable to allocate memory");
+        return NULL;
+    }
+
+    for (uint32_t i = 0; i < (uint32_t)(aofmt.rate * duration); i++) {
+        double t = (double)i / aofmt.rate;
+        int sample = (int)(volume * 32768 * (sin(2 * M_PI * freq * t) > 0 ? 1 : -1));
+        if (aofmt.byte_format == AO_FMT_LITTLE) {
+            buf[i * aofmt.channels * aofmt.bits / 8] = sample & 0xFF;
+            buf[i * aofmt.channels * aofmt.bits / 8 + 1] = (sample >> 8) & 0xFF;
+            buf[i * aofmt.channels * aofmt.bits / 8 + 2] = sample & 0xFF;
+            buf[i * aofmt.channels * aofmt.bits / 8 + 3] = (sample >> 8) & 0xFF;
+        } else if (aofmt.byte_format == AO_FMT_BIG) {
+            buf[i * aofmt.channels * aofmt.bits / 8] = (sample >> 8) & 0xFF;
+            buf[i * aofmt.channels * aofmt.bits / 8 + 1] = sample & 0xFF;
+            buf[i * aofmt.channels * aofmt.bits / 8 + 2] = (sample >> 8) & 0xFF;
+            buf[i * aofmt.channels * aofmt.bits / 8 + 3] = sample & 0xFF;
+        }
+    }
+
+    int code = ao_play(ao_fastplay_dev, buf, bufsize);
+    free(buf);
+
     return Py_BuildValue("i", code);
 }
 
@@ -234,9 +259,11 @@ static PyMethodDef _methods[] = {
     {"pyao_open_file",          (PyCFunction)pyao_open_file,            METH_VARARGS | METH_KEYWORDS,   "pyao_open_file(driver, filename, bits, chs, rate, bfmt, matrix, overwrite)\n--\n\nOpen an audio device for file playback."},
     {"pyao_close",              (PyCFunction)pyao_close,                METH_VARARGS,                   "pyao_close(device)\n--\n\nClose an audio device."},
     {"pyao_play",               (PyCFunction)pyao_play,                 METH_VARARGS | METH_KEYWORDS,   "pyao_play(device, data)\n--\n\nPlay a buffer on an audio device."},
-    {"pyao_fast_play",          (PyCFunction)pyao_fast_play,            METH_VARARGS | METH_KEYWORDS,   "pyao_fast_play(driver, bits, chs, rate, bfmt, matrix, data)\n--\n\nPlay a buffer on an audio driver."},
-    {"pyao_fast_play_file",     (PyCFunction)pyao_fast_play_file,       METH_VARARGS | METH_KEYWORDS,   "pyao_fast_play_file(driver, filename, ow, bits, chs, rate, bfmt, matrix, data)\n--\n\nPlay a buffer into a file on an audio driver."},
-    {"pyao_fast_play_sine",     (PyCFunction)pyao_fast_play_sine,       METH_VARARGS | METH_KEYWORDS,   "pyao_fast_play_sine(driver, freq, volume, duration)\n--\n\nPlay a sine wave on an audio driver."},
+    {"pyao_fast_play_init",     (PyCFunction)pyao_fast_play_init,       METH_VARARGS | METH_KEYWORDS,   "pyao_fast_play_init(bits, chs, rate, bfmt, matrix)\n--\n\nInitialize a fast playback device."},
+    {"pyao_fast_play",          (PyCFunction)pyao_fast_play,            METH_VARARGS | METH_KEYWORDS,   "pyao_fast_play(data)\n--\n\nPlay a buffer on a fast playback device."},
+    {"pyao_fast_play_sine",     (PyCFunction)pyao_fast_play_sine,       METH_VARARGS | METH_KEYWORDS,   "pyao_fast_play_sine(freq, volume, duration)\n--\n\nPlay a sine wave on a fast playback device."},
+    {"pyao_fast_play_square",   (PyCFunction)pyao_fast_play_square,     METH_VARARGS | METH_KEYWORDS,   "pyao_fast_play_square(freq, volume, duration)\n--\n\nPlay a square wave on a fast playback device."},
+    {"pyao_fast_play_close",    (PyCFunction)pyao_fast_play_close,      METH_VARARGS,                   "pyao_fast_play_close(device)\n--\n\nClose a fast playback device."},
     {NULL,                      NULL,                                   0,                              NULL}
 };
 
