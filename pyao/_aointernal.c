@@ -4,11 +4,13 @@
 #include <string.h>
 #include <ao/ao.h>
 
+#define MAX_DEVICE_COUNT 2048
+
 // ao_device descriptor
-ao_device** ao_device_list = NULL;
+ao_device* ao_device_list[MAX_DEVICE_COUNT];
 int ao_device_count = 0;
 
-// global fast play device
+// (deprecated) global fast play device
 ao_device* ao_fastplay_dev = NULL;
 ao_sample_format* fast_fmt = NULL;
 
@@ -35,7 +37,9 @@ int add_ao_device(ao_device *device) {
     if (device == NULL) {
         return -1;
     }
-    ao_device_list = (ao_device **)realloc(ao_device_list, sizeof(ao_device*) * (ao_device_count + 1));
+    if (ao_device_count >= MAX_DEVICE_COUNT) {
+        return -2;
+    }
     ao_device_list[ao_device_count] = device;
     return ao_device_count++;
 }
@@ -111,7 +115,7 @@ static PyObject* pyao_play(PyObject* self, PyObject* args, PyObject* kwargs) {
     return Py_BuildValue("i", code);
 }
 
-// initialize fast play device
+// (deprecated) initialize fast play device
 static PyObject* pyao_fast_play_init(PyObject* self, PyObject* args, PyObject* kwargs) {
     ao_sample_format aofmt;
     memset(&aofmt, 0, sizeof(aofmt));
@@ -129,13 +133,13 @@ static PyObject* pyao_fast_play_init(PyObject* self, PyObject* args, PyObject* k
     Py_RETURN_NONE;
 }
 
-// close fast play device
+// (deprecated) close fast play device
 static PyObject* pyao_fast_play_close(PyObject* self) {
     ao_close(ao_fastplay_dev);
     Py_RETURN_NONE;
 }
 
-// directly play data to fast play device
+// (deprecated) directly play data to fast play device
 static PyObject* pyao_fast_play(PyObject* self, PyObject* args, PyObject* kwargs) {
     char* bytes;
     uint_32 size;
@@ -156,7 +160,7 @@ static PyObject* pyao_fast_play(PyObject* self, PyObject* args, PyObject* kwargs
     return Py_BuildValue("i", 0);
 }
 
-// fast play sine wave
+// (deprecated) fast play sine wave
 static PyObject* pyao_fast_play_sine(PyObject* self, PyObject* args, PyObject* kwargs) {
     double freq, volume, duration;
     static char* argsname[] = {
@@ -203,7 +207,7 @@ static PyObject* pyao_fast_play_sine(PyObject* self, PyObject* args, PyObject* k
     return Py_BuildValue("i", code);
 }
 
-// fast play square wave
+// (deprecated) fast play square wave
 static PyObject* pyao_fast_play_square(PyObject* self, PyObject* args, PyObject* kwargs) {
     double freq, volume, duration;
     static char* argsname[] = {
