@@ -57,9 +57,9 @@ for freq, dura in [
 ]:
     pyao.fast.fast_play_sine(
         pyao.default_driver_id(),
-        440,
+        freq,
         0.75,
-        1
+        dura
     )
 
 pyao.pyao_shutdown()
