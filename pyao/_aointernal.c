@@ -116,9 +116,12 @@ static PyObject* pyao_fast_play(PyObject* self, PyObject* args, PyObject* kwargs
     memset(&aofmt, 0, sizeof(aofmt));
 
     static char* argsname[] = {"driver", "bits", "chs", "rate", "bfmt", "matrix", "data", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "iiiiisy#:pyao_fast_play", argsname, &drvid, &aofmt.bits, &aofmt.channels, &aofmt.rate, &aofmt.byte_format, aofmt.matrix, bytes, &size))
+    if (!PyArg_ParseTupleAndKeywords(
+                args, kwargs, "iiiiisy#:pyao_fast_play", argsname,
+                &drvid, &aofmt.bits, &aofmt.channels, &aofmt.rate, 
+                &aofmt.byte_format, &aofmt.matrix, bytes, &size))
         return NULL;
-    
+
     ao_device* device = ao_open_live(drvid, &aofmt, NULL);
     if (device == NULL) {
         PyErr_SetString(PyExc_OSError, "Unable to open an audio device");
@@ -126,7 +129,7 @@ static PyObject* pyao_fast_play(PyObject* self, PyObject* args, PyObject* kwargs
     }
     int code = ao_play(device, bytes, size);
     ao_close(device);
-    return Py_BuildValue("i", code);
+    return Py_BuildValue("i", 0);
 }
 
 // directly play data into a file
@@ -139,7 +142,7 @@ static PyObject* pyao_fast_play_file(PyObject* self, PyObject* args, PyObject* k
     memset(&aofmt, 0, sizeof(aofmt));
 
     static char* argsname[] = {"driver", "filename", "ow", "bits", "chs", "rate", "bfmt", "matrix", "data", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "isiiiiisy#:pyao_fast_play_file", argsname, &drvid, &filename, &ow, &aofmt.bits, &aofmt.channels, &aofmt.rate, &aofmt.byte_format, aofmt.matrix, bytes, &size))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "isiiiiisy#:pyao_fast_play_file", argsname, &drvid, &filename, &ow, &aofmt.bits, &aofmt.channels, &aofmt.rate, &aofmt.byte_format, &aofmt.matrix, bytes, &size))
         return NULL;
     
     ao_device* device = ao_open_file(drvid, filename, ow, &aofmt, NULL);
