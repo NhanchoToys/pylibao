@@ -5,8 +5,12 @@
 #include <ao/ao.h>
 
 // ao_device descriptor
-ao_device **ao_device_list = NULL;
+ao_device** ao_device_list = NULL;
 int ao_device_count = 0;
+
+// global fast play device
+ao_device* ao_fastplay_dev = NULL;
+ao_sample_format* fast_fmt = NULL;
 
 // initialize
 static PyObject* pyao_init(PyObject* self) {
@@ -107,6 +111,22 @@ static PyObject* pyao_play(PyObject* self, PyObject* args, PyObject* kwargs) {
     return Py_BuildValue("i", code);
 }
 
+// initialize fast play device
+static PyObject* pyao_fast_play_init(PyObject* self) {
+    ao_sample_format aofmt;
+    memset(&aofmt, 0, sizeof(aofmt));
+
+    aofmt.bits = 16;
+    aofmt.channels = 2;
+    aofmt.rate = 44100;
+    aofmt.byte_format = AO_FMT_LITTLE;
+
+    fast_fmt = &aofmt
+
+    ao_device* ao_fastplay_dev = ao_open_live(ao_default_driver_id(), &aofmt, NULL);
+    Py_RETURN_NONE;
+}
+
 // directly play data to driver
 static PyObject* pyao_fast_play(PyObject* self, PyObject* args, PyObject* kwargs) {
     int drvid;
@@ -160,32 +180,22 @@ static PyObject* pyao_fast_play_file(PyObject* self, PyObject* args, PyObject* k
 }
 
 static PyObject* pyao_fast_play_sine(PyObject* self, PyObject* args, PyObject* kwargs) {
-    int drvid;
     double freq, volume, duration;
-    ao_sample_format aofmt;
-    memset(&aofmt, 0, sizeof(aofmt));
-
     static char* argsname[] = {
-        "driver", // driver
         "freq", "volume", "duration", NULL // sine
     };
     if (!PyArg_ParseTupleAndKeywords(
-        args, kwargs, "iddd:pyao_fast_play_sine", argsname,
-        &drvid,
+        args, kwargs, "ddd:pyao_fast_play_sine", argsname,
         &freq, &volume, &duration
     ))
         return NULL;
 
-    aofmt.bits = 16;
-    aofmt.channels = 2;
-    aofmt.rate = 44100;
-    aofmt.byte_format = AO_FMT_LITTLE;
-
-    ao_device* device = ao_open_live(drvid, &aofmt, NULL);
-    if (device == NULL) {
+    if (ao_fastplay_dev == NULL) {
         PyErr_SetString(PyExc_OSError, "Unable to open an audio device");
         return NULL;
     }
+
+    ao_sample_format aofmt = *fast_fmt
 
     uint32_t bufsize = aofmt.bits / 8 * aofmt.channels * aofmt.rate * duration;
     char* buf = (char*)calloc(bufsize, sizeof(char));
