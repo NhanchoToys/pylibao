@@ -65,7 +65,7 @@ with pyao.fast.FastPlay(
         (261.6, 1.0), # C4
     ]:
         print(freq, dura)
-        fast_play.play_sine(
+        fast_play.play_square(
             freq,
             0.75,
             dura

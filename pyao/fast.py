@@ -35,27 +35,27 @@ def fast_play_init(ao_format: AOFormat) -> None:
     pyao_fast_play_init(ao_format.bits, ao_format.channels, ao_format.rate, ao_format.byte_format, ao_format.mat)
 
 
-def fast_play(data: bytes) -> int:
+def fast_play(ao_format: AOFormat, data: bytes) -> int:
     """
     Play the given data.
 
     :return: Status code.
     """
-    return pyao_fast_play(data)
+    return pyao_fast_play(ao_format.bits, ao_format.channels, ao_format.rate, ao_format.byte_format, ao_format.mat, data)
 
 
-def fast_play_sine(freq: float = 440.0, duration: float = 1.0, volume: float = 1.0):
+def fast_play_sine(ao_format: AOFormat, freq: float = 440.0, duration: float = 1.0, volume: float = 1.0):
     """
     Play a sine wave with the given frequency, duration and volume.
     """
-    pyao_fast_play_sine(freq, duration, volume)
+    pyao_fast_play_sine(ao_format.bits, ao_format.channels, ao_format.rate, ao_format.byte_format, ao_format.mat, freq, duration, volume)
 
 
-def fast_play_square(freq: float = 440.0, duration: float = 1.0, volume: float = 1.0):
+def fast_play_square(ao_format: AOFormat, freq: float = 440.0, duration: float = 1.0, volume: float = 1.0):
     """
     Play a square wave with the given frequency, duration and volume.
     """
-    pyao_fast_play_square(freq, duration, volume)
+    pyao_fast_play_square(ao_format.bits, ao_format.channels, ao_format.rate, ao_format.byte_format, ao_format.mat, freq, duration, volume)
 
 
 def fast_play_close() -> None:
@@ -75,13 +75,7 @@ class FastPlay:
 
         :param ao_format: The audio format.
         """
-        fast_play_init(ao_format)
-
-    def __del__(self):
-        """
-        Close the FastPlay class.
-        """
-        fast_play_close()
+        self._ao_format = ao_format
 
     def __enter__(self):
         """
@@ -93,7 +87,7 @@ class FastPlay:
         """
         Exit the with statement.
         """
-        fast_play_close()
+        pass
 
     def play(self, data: bytes) -> int:
         """
@@ -101,22 +95,16 @@ class FastPlay:
 
         :return: Status code.
         """
-        return fast_play(data)
+        return fast_play(self._ao_format, data)
 
     def play_sine(self, freq: float = 440.0, duration: float = 1.0, volume: float = 1.0):
         """
         Play a sine wave with the given frequency, duration and volume.
         """
-        fast_play_sine(freq, duration, volume)
+        fast_play_sine(self._ao_format, freq, duration, volume)
 
     def play_square(self, freq: float = 440.0, duration: float = 1.0, volume: float = 1.0):
         """
         Play a square wave with the given frequency, duration and volume.
         """
-        fast_play_square(freq, duration, volume)
-
-    def close(self) -> None:
-        """
-        Close the FastPlay class.
-        """
-        fast_play_close()
+        fast_play_square(self._ao_format, freq, duration, volume)
