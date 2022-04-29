@@ -167,15 +167,19 @@ static PyObject* pyao_fast_play_sine(PyObject* self, PyObject* args, PyObject* k
 
     static char* argsname[] = {
         "driver", // driver
-        "bits", "chs", "rate", "bfmt", "matrix", // format
         "freq", "volume", "duration", NULL // sine
     };
     if (!PyArg_ParseTupleAndKeywords(
-        args, kwargs, "iiiiisfff:pyao_fast_play_sine", argsname,
-        &drvid, &aofmt.bits, &aofmt.channels, &aofmt.rate, &aofmt.byte_format, &aofmt.matrix,
+        args, kwargs, "iddd:pyao_fast_play_sine", argsname,
+        &drvid,
         &freq, &volume, &duration
     ))
         return NULL;
+
+    aofmt.bits = 16;
+    aofmt.channels = 2;
+    aofmt.rate = 44100;
+    aofmt.byte_format = AO_FMT_LITTLE;
 
     ao_device* device = ao_open_live(drvid, &aofmt, NULL);
     if (device == NULL) {
@@ -190,19 +194,17 @@ static PyObject* pyao_fast_play_sine(PyObject* self, PyObject* args, PyObject* k
         return NULL;
     }
 
-    for (uint32_t i = 0; i < (int)(aofmt.rate * duration); i++) {
+    for (uint32_t i = 0; i < (uint32_t)(aofmt.rate * duration); i++) {
         double t = (double)i / aofmt.rate;
         int sample = (int)(volume * 32768 * sin(2 * M_PI * freq * t));
         if (aofmt.byte_format == AO_FMT_LITTLE) {
             buf[i * aofmt.channels * aofmt.bits / 8] = sample & 0xFF;
             buf[i * aofmt.channels * aofmt.bits / 8 + 1] = (sample >> 8) & 0xFF;
-            if (aofmt.bits == 16) {
-                buf[i * aofmt.channels * aofmt.bits / 8 + 2] = (sample >> 16) & 0xFF;
-                buf[i * aofmt.channels * aofmt.bits / 8 + 3] = (sample >> 24) & 0xFF;
-            }
+            buf[i * aofmt.channels * aofmt.bits / 8 + 2] = sample & 0xFF;
+            buf[i * aofmt.channels * aofmt.bits / 8 + 3] = (sample >> 8) & 0xFF;
         } else if (aofmt.byte_format == AO_FMT_BIG) {
-            buf[i * aofmt.channels * aofmt.bits / 8] = (sample >> 24) & 0xFF;
-            buf[i * aofmt.channels * aofmt.bits / 8 + 1] = (sample >> 16) & 0xFF;
+            buf[i * aofmt.channels * aofmt.bits / 8] = (sample >> 8) & 0xFF;
+            buf[i * aofmt.channels * aofmt.bits / 8 + 1] = sample & 0xFF;
             buf[i * aofmt.channels * aofmt.bits / 8 + 2] = (sample >> 8) & 0xFF;
             buf[i * aofmt.channels * aofmt.bits / 8 + 3] = sample & 0xFF;
         }
@@ -224,7 +226,7 @@ static PyMethodDef _methods[] = {
     {"pyao_play",               (PyCFunction)pyao_play,                 METH_VARARGS | METH_KEYWORDS,   "pyao_play(device, data)\n--\n\nPlay a buffer on an audio device."},
     {"pyao_fast_play",          (PyCFunction)pyao_fast_play,            METH_VARARGS | METH_KEYWORDS,   "pyao_fast_play(driver, bits, chs, rate, bfmt, matrix, data)\n--\n\nPlay a buffer on an audio driver."},
     {"pyao_fast_play_file",     (PyCFunction)pyao_fast_play_file,       METH_VARARGS | METH_KEYWORDS,   "pyao_fast_play_file(driver, filename, ow, bits, chs, rate, bfmt, matrix, data)\n--\n\nPlay a buffer into a file on an audio driver."},
-    {"pyao_fast_play_sine",     (PyCFunction)pyao_fast_play_sine,       METH_VARARGS | METH_KEYWORDS,   "pyao_fast_play_sine(driver, bits, chs, rate, bfmt, matrix, freq, volume, duration)\n--\n\nPlay a sine wave on an audio driver."},
+    {"pyao_fast_play_sine",     (PyCFunction)pyao_fast_play_sine,       METH_VARARGS | METH_KEYWORDS,   "pyao_fast_play_sine(driver, freq, volume, duration)\n--\n\nPlay a sine wave on an audio driver."},
     {NULL,                      NULL,                                   0,                              NULL}
 };
 

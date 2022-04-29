@@ -22,11 +22,11 @@ playbytes = AO.fast_play
 play2file = AO.fast_play_file
 
 
-def fast_play_sine(driver: int, format: AOFormat, freq: float = 440.0, duration: float = 1.0, volume: float = 1.0):
+def fast_play_sine(driver: int, freq: float = 440.0, duration: float = 1.0, volume: float = 1.0):
     """
     Play a sine wave with the given frequency, duration and volume.
     """
-    pyao_fast_play_sine(driver, format.bits, format.channels, format.rate, format.byte_format, format.mat, freq, duration, volume)
+    pyao_fast_play_sine(driver, freq, duration, volume)
 
 
 class FastPlay:
