@@ -171,7 +171,7 @@ static PyObject* pyao_fast_play_sine(PyObject* self, PyObject* args, PyObject* k
         "freq", "volume", "duration", NULL // sine
     };
     if (!PyArg_ParseTupleAndKeywords(
-        args, kwargs, "iiiiis:pyao_fast_play_sine", argsname,
+        args, kwargs, "iiiiisfff:pyao_fast_play_sine", argsname,
         &drvid, &aofmt.bits, &aofmt.channels, &aofmt.rate, &aofmt.byte_format, &aofmt.matrix,
         &freq, &volume, &duration
     ))
