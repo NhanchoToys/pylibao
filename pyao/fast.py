@@ -48,14 +48,14 @@ def fast_play_sine(ao_format: AOFormat, freq: float = 440.0, duration: float = 1
     """
     Play a sine wave with the given frequency, duration and volume.
     """
-    pyao_fast_play_sine(ao_format.bits, ao_format.channels, ao_format.rate, ao_format.byte_format, ao_format.mat, freq, duration, volume)
+    return pyao_fast_play_sine(freq=freq, duration=duration, volume=volume)
 
 
 def fast_play_square(ao_format: AOFormat, freq: float = 440.0, duration: float = 1.0, volume: float = 1.0):
     """
     Play a square wave with the given frequency, duration and volume.
     """
-    pyao_fast_play_square(ao_format.bits, ao_format.channels, ao_format.rate, ao_format.byte_format, ao_format.mat, freq, duration, volume)
+    return pyao_fast_play_square(freq=freq, duration=duration, volume=volume)
 
 
 def fast_play_close() -> None:
@@ -101,10 +101,10 @@ class FastPlay:
         """
         Play a sine wave with the given frequency, duration and volume.
         """
-        fast_play_sine(self._ao_format, freq, duration, volume)
+        return fast_play_sine(self._ao_format, freq, duration, volume)
 
     def play_square(self, freq: float = 440.0, duration: float = 1.0, volume: float = 1.0):
         """
         Play a square wave with the given frequency, duration and volume.
         """
-        fast_play_square(self._ao_format, freq, duration, volume)
+        return fast_play_square(self._ao_format, freq, duration, volume)
