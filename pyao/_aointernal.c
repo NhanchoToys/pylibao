@@ -7,8 +7,8 @@
 #define MAX_DEVICE_COUNT 2048
 
 // ao_device descriptor
-ao_device* ao_device_list[MAX_DEVICE_COUNT];
-int ao_device_count = 0;
+static ao_device* ao_device_list[MAX_DEVICE_COUNT];
+static int ao_device_count = 0;
 
 // (deprecated) global fast play device
 ao_device* ao_fastplay_dev = NULL;
@@ -49,12 +49,11 @@ static PyObject* pyao_open_live(PyObject* self, PyObject* args, PyObject* kwargs
     ao_device* device;
     ao_sample_format aofmt;
     memset(&aofmt, 0, sizeof(aofmt));
-    PyObject* pyfmt;
 
     static char* argsname[] = {"driver", "bits", "chs", "rate", "bfmt", "matrix", NULL};
     if (!PyArg_ParseTupleAndKeywords(
                 args, kwargs, "iiiiis:pyao_open_live", argsname,
-                &drvid, &aofmt.bits, &aofmt.channels, &aofmt.rate, &pyfmt, &aofmt.matrix
+                &drvid, &aofmt.bits, &aofmt.channels, &aofmt.rate, &aofmt.byte_format, &aofmt.matrix
                 ))
         return NULL;
 
@@ -69,16 +68,15 @@ static PyObject* pyao_open_live(PyObject* self, PyObject* args, PyObject* kwargs
 
 static PyObject* pyao_open_file(PyObject* self, PyObject* args, PyObject* kwargs) {
     int drvid, ow = 0;
-    ao_device* device;
+    static ao_device* device;
     ao_sample_format aofmt;
     memset(&aofmt, 0, sizeof(aofmt));
-    PyObject* pyfmt;
     char* filename;
 
     static char* argsname[] = {"driver", "filename", "bits", "chs", "rate", "bfmt", "matrix", "overwrite", NULL};
     if (!PyArg_ParseTupleAndKeywords(
                 args, kwargs, "isiiiisi:pyao_open_file", argsname,
-                &drvid, &filename, &aofmt.bits, &aofmt.channels, &aofmt.rate, &pyfmt, &aofmt.matrix, &ow
+                &drvid, &filename, &aofmt.bits, &aofmt.channels, &aofmt.rate, &aofmt.byte_format, &aofmt.matrix, &ow
                 ))
         return NULL;
 
