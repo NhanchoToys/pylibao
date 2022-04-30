@@ -4,9 +4,7 @@ A set of small tools to make some simple sounds conveniently.
 
 __all__ = [
     'FastPlay',
-    'fast_play_init',
     'fast_play',
-    'fast_play_close',
     'fast_play_sine',
     'fast_play_square',
 ]
@@ -18,21 +16,10 @@ from pyao._abstract import (
 )
 
 from pyao._aointernal import (
-    pyao_fast_play_init,
     pyao_fast_play,
     pyao_fast_play_sine,
     pyao_fast_play_square,
-    pyao_fast_play_close,
 )
-
-
-def fast_play_init(ao_format: AOFormat) -> None:
-    """
-    Initialize the fast play library.
-
-    :param ao_format: The audio format.
-    """
-    pyao_fast_play_init(ao_format.bits, ao_format.channels, ao_format.rate, ao_format.byte_format, ao_format.mat)
 
 
 def fast_play(ao_format: AOFormat, data: bytes) -> int:
@@ -56,13 +43,6 @@ def fast_play_square(ao_format: AOFormat, freq: float = 440.0, duration: float =
     Play a square wave with the given frequency, duration and volume.
     """
     return pyao_fast_play_square(freq=freq, duration=duration, volume=volume)
-
-
-def fast_play_close() -> None:
-    """
-    Close the fast play library.
-    """
-    pyao_fast_play_close()
 
 
 class FastPlay:
