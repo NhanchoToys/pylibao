@@ -4,7 +4,7 @@ An abstract interface for libao.
 
 from dataclasses import dataclass
 from typing import NoReturn, Optional, Union
-from pyao import _aointernal, presets
+from pyao import _aointernal
 
 
 AO_FMT_NATIVE: int = _aointernal.AO_FMT_NATIVE
@@ -23,7 +23,7 @@ class PlaybackError(Exception):
 class AOFormat:
     """
     An abstract object to mark ao_sample_format
-    
+
     :param bits: The number of bits per sample.
     :param rate: The sample rate.
     :param channels: The number of channels.
@@ -57,7 +57,10 @@ def pyao_default_driver_id() -> int:
     """
     drvid = _aointernal.pyao_default_driver_id()
     if drvid == -1:
-        raise RuntimeError("No default audio driver found. Have you initialized the audio library?")
+        raise RuntimeError(
+            "No default audio driver found. "
+            "Have you initialized the audio library?"
+        )
     return drvid
 
 
@@ -70,10 +73,14 @@ def pyao_open_live(driver: int, fmt: AOFormat) -> int:
 
     :return: The audio device descriptor.
     """
-    return _aointernal.pyao_open_live(driver, fmt.bits, fmt.channels, fmt.rate, fmt.byte_format, fmt.mat)
+    return _aointernal.pyao_open_live(
+        driver, fmt.bits, fmt.channels, fmt.rate, fmt.byte_format, fmt.mat
+    )
 
 
-def pyao_open_file(driver: int, file: str, fmt: AOFormat, overwrite: bool = False) -> int:
+def pyao_open_file(
+    driver: int, file: str, fmt: AOFormat, overwrite: bool = False
+) -> int:
     """
     Open a file audio stream.
 
@@ -84,7 +91,11 @@ def pyao_open_file(driver: int, file: str, fmt: AOFormat, overwrite: bool = Fals
 
     :return: The audio device descriptor.
     """
-    return _aointernal.pyao_open_file(driver, file, fmt.bits, fmt.channels, fmt.rate, fmt.byte_format, fmt.mat, int(overwrite))
+    return _aointernal.pyao_open_file(
+        driver, file,
+        fmt.bits, fmt.channels, fmt.rate, fmt.byte_format, fmt.mat,
+        int(overwrite)
+    )
 
 
 def pyao_close(stream: int) -> Union[None, NoReturn]:
@@ -108,11 +119,11 @@ def pyao_play(stream: int, data: bytes) -> Union[None, NoReturn]:
         raise PlaybackError("Error playing audio data.")
 
 
-
 class AODevice:
     """
     An abstract object to mark ao_device
     """
+
     def __init__(self, st: int, fmt: AOFormat):
         """
         :param st: The audio device descriptor.
@@ -123,7 +134,6 @@ class AODevice:
 
     def __del__(self):
         self.close()
-        super().__del__()  # type: ignore
 
     def __enter__(self):
         return self
@@ -155,8 +165,8 @@ class AO:
     """
     @staticmethod
     def open_live(
-        driver: Optional[int] = None,
-        format: Optional[AOFormat] = None
+        driver: int,
+        format: AOFormat
     ) -> AODevice:
         """
         Open a live audio stream.
@@ -164,33 +174,28 @@ class AO:
         :param driver: The audio driver ID.
         :param format: The audio format.
         """
-        if driver is None:
-            driver = pyao_default_driver_id()
-        if format is None:
-            format = presets.FMT_B16C2R44100LE
+        if not isinstance(format, AOFormat):
+            raise ValueError("Invalid format.")
         return AODevice(pyao_open_live(driver, format), format)
 
     @staticmethod
     def open_file(
-        driver: Optional[int] = None,
-        file: Optional[str] = None,
-        format: Optional[AOFormat] = None,
-        overwrite: Optional[bool] = False
+        driver: int,
+        format: AOFormat,
+        file: str,
+        overwrite: bool = False
     ) -> AODevice:
         """
         Open a file audio stream.
 
         :param driver: The audio driver ID.
-        :param file: The file path.
         :param format: The audio format.
+        :param file: The file path.
         :param overwrite: Whether to overwrite the file if it exists.
         """
-        if driver is None:
-            driver = pyao_default_driver_id()
-        if format is None:
-            format = presets.FMT_B16C2R44100LE
-        if file is None:
-            raise ValueError("No file specified.")
-        if overwrite is None:
-            overwrite = False
-        return AODevice(pyao_open_file(driver, file, format, overwrite), format)
+        if not isinstance(format, AOFormat):
+            raise ValueError("Invalid format.")
+        return AODevice(
+            pyao_open_file(driver, file, format, overwrite),
+            format
+        )
