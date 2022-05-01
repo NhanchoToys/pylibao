@@ -8,13 +8,7 @@ pyao.pyao_init()
 
 with pyao.AO.open_live(
     pyao.default_driver_id(),
-    pyao.AOFormat(
-        16,
-        2,
-        44100,
-        pyao.AO_FMT_LITTLE,
-        "L,R"
-    )
+    pyao.presets.FMT_B16C2R44100LE
 ) as player:
     for freq, dura in [
         (261.6, 0.5),  # C4
@@ -67,5 +61,6 @@ with pyao.AO.open_live(
     ]:
         print(freq, dura)
         # play_square(freq, dura, 0.75)
+        player.play(pyao.wave.gen_sine(freq, dura))
 
 pyao.pyao_shutdown()

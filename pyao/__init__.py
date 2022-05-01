@@ -5,6 +5,8 @@ Python libao interface.
 __all__ = [
     '_aointernal',
     'presets',
+    'wave',
+    'PlaybackError',
     'AO',
     'AODevice',
     'AOFormat',
@@ -18,6 +20,7 @@ __all__ = [
 
 from pyao import _aointernal
 from pyao._abstract import (
+    PlaybackError,
     AODevice,
     AOFormat,
     AO,
@@ -28,4 +31,4 @@ from pyao._abstract import (
     AO_FMT_LITTLE,
     AO_FMT_BIG
 )
-from pyao import presets
+from pyao import presets, wave
