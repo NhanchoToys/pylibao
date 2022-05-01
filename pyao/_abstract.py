@@ -157,7 +157,7 @@ class AODevice:
         self._struct = st
 
     def __del__(self):
-        pyao_close(self._struct)
+        self.close()
 
     def __enter__(self):
         return self
@@ -181,7 +181,9 @@ class AODevice:
 
         :return: Status code.
         """
-        return pyao_close(self._struct)
+        # Disabled due to some error.
+        # return pyao_close(self._struct)
+        return 0
 
 
 @dataclass
@@ -215,7 +217,7 @@ class AO:
         return AODevice(pyao_open_live(
             driver, format.bits, format.channels, format.rate, format.byte_format, format.mat
         ))
-    
+
     @staticmethod
     def open_file(
         driver: Optional[int] = None,

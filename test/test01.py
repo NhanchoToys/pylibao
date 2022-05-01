@@ -19,6 +19,6 @@ live = pyao.AO.open_live(
 
 live.play(b"\x00\x00\xff\xff\x00\x00\xff\xff")
 
-live.close()
+# live.close()
 
 pyao.pyao_shutdown()

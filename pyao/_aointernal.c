@@ -7,7 +7,7 @@
 #define MAX_DEVICE_COUNT 2048
 
 // ao_device descriptor
-static ao_device* ao_device_list[MAX_DEVICE_COUNT];
+static ao_device** ao_device_list = NULL;
 static int ao_device_count = 0;
 
 // (deprecated) global fast play device
@@ -37,9 +37,7 @@ int add_ao_device(ao_device *device) {
     if (device == NULL) {
         return -1;
     }
-    if (ao_device_count >= MAX_DEVICE_COUNT) {
-        return -2;
-    }
+    ao_device_list = (ao_device**)realloc(ao_device_list, sizeof(ao_device*) * (ao_device_count + 1));
     ao_device_list[ao_device_count] = device;
     return ao_device_count++;
 }
@@ -95,6 +93,10 @@ static PyObject* pyao_close(PyObject* self, PyObject* args) {
         return NULL;
 
     ao_device* device = ao_device_list[d_index];
+    if (device == NULL) {
+        PyErr_SetString(PyExc_OSError, "Cannot close a closed device");
+        return NULL;
+    }
     int code = ao_close(device);
     return Py_BuildValue("i", code);
 }
