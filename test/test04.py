@@ -6,7 +6,8 @@ import pyao
 
 pyao.pyao_init()
 
-with pyao.fast.FastPlay(
+with pyao.AO.open_live(
+    pyao.default_driver_id(),
     pyao.AOFormat(
         16,
         2,
@@ -14,7 +15,7 @@ with pyao.fast.FastPlay(
         pyao.AO_FMT_LITTLE,
         "L,R"
     )
-) as fast_play:
+) as player:
     for freq, dura in [
         (261.6, 0.5),  # C4
         (261.6, 0.5),  # C4
@@ -65,6 +66,6 @@ with pyao.fast.FastPlay(
         (261.6, 1.0),  # C4
     ]:
         print(freq, dura)
-        fast_play.play_square(freq, dura, 0.75)
+        # play_square(freq, dura, 0.75)
 
 pyao.pyao_shutdown()

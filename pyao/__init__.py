@@ -4,7 +4,6 @@ Python libao interface.
 
 __all__ = [
     '_aointernal',
-    'fast',
     'presets',
     'AO',
     'AODevice',
@@ -29,4 +28,4 @@ from pyao._abstract import (
     AO_FMT_LITTLE,
     AO_FMT_BIG
 )
-from pyao import fast, presets
+from pyao import presets

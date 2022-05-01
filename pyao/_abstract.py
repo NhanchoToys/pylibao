@@ -3,13 +3,38 @@ An abstract interface for libao.
 """
 
 from dataclasses import dataclass
-from typing import Optional
-from pyao import _aointernal
+from typing import NoReturn, Optional, Union
+from pyao import _aointernal, presets
 
 
 AO_FMT_NATIVE: int = _aointernal.AO_FMT_NATIVE
 AO_FMT_LITTLE: int = _aointernal.AO_FMT_LITTLE
 AO_FMT_BIG: int = _aointernal.AO_FMT_BIG
+
+
+class PlaybackError(Exception):
+    """
+    Raised when an audio playback error occurs.
+    """
+    pass
+
+
+@dataclass(frozen=True)
+class AOFormat:
+    """
+    An abstract object to mark ao_sample_format
+    
+    :param bits: The number of bits per sample.
+    :param rate: The sample rate.
+    :param channels: The number of channels.
+    :param byte_format: The byte format.
+    :param mat: The matrix for multi-channel audio.
+    """
+    bits: int
+    rate: int
+    channels: int
+    byte_format: int
+    mat: str
 
 
 def pyao_init():
@@ -36,128 +61,69 @@ def pyao_default_driver_id() -> int:
     return drvid
 
 
-def pyao_open_live(
-    driver: int,
-    bits: int,
-    chs: int,
-    rate: int,
-    bfmt: int,
-    matrix: str
-) -> int:
+def pyao_open_live(driver: int, fmt: AOFormat) -> int:
     """
     Open a live audio stream.
 
     :param driver: The audio driver ID.
-    :param bits: The number of bits per sample.
-    :param chs: The number of channels.
-    :param rate: The sample rate.
-    :param bfmt: The byte format.
-    :param matrix: The channel matrix.
+    :param fmt: The audio format.
 
     :return: The audio device descriptor.
     """
-    return _aointernal.pyao_open_live(driver, bits, chs, rate, bfmt, matrix)
+    return _aointernal.pyao_open_live(driver, fmt.bits, fmt.channels, fmt.rate, fmt.byte_format, fmt.mat)
 
 
-def pyao_open_file(
-    driver: int,
-    file: str,
-    bits: int,
-    chs: int,
-    rate: int,
-    bfmt: int,
-    matrix: str,
-    overwrite: int
-) -> int:
+def pyao_open_file(driver: int, file: str, fmt: AOFormat, overwrite: bool = False) -> int:
     """
     Open a file audio stream.
 
     :param driver: The audio driver ID.
     :param file: The file path.
-    :param bits: The number of bits per sample.
-    :param chs: The number of channels.
-    :param rate: The sample rate.
-    :param bfmt: The byte format.
-    :param matrix: The channel matrix.
+    :param fmt: The audio format.
     :param overwrite: Overwrite the file if it exists.
 
     :return: The audio device descriptor.
     """
-    return _aointernal.pyao_open_file(driver, file, bits, chs, rate, bfmt, matrix, overwrite)
+    return _aointernal.pyao_open_file(driver, file, fmt.bits, fmt.channels, fmt.rate, fmt.byte_format, fmt.mat, int(overwrite))
 
 
-def pyao_close(stream: int) -> int:
+def pyao_close(stream: int) -> Union[None, NoReturn]:
     """
     Close an audio stream.
 
     :param stream: The audio device descriptor.
-
-    :return: Status code.
     """
-    return _aointernal.pyao_close(stream)
+    if _aointernal.pyao_close(stream):
+        raise PlaybackError("Error closing audio stream.")
 
 
-def pyao_play(stream: int, data: bytes) -> int:
+def pyao_play(stream: int, data: bytes) -> Union[None, NoReturn]:
     """
     Play audio data.
 
     :param stream: The audio device descriptor.
     :param data: The audio data.
-
-    :return: Status code.
     """
-    return _aointernal.pyao_play(stream, data)
+    if _aointernal.pyao_play(stream, data):
+        raise PlaybackError("Error playing audio data.")
 
-
-def pyao_fast_play_init(
-    bits: int,
-    chs: int,
-    rate: int,
-    bfmt: int,
-    matrix: str
-) -> None:
-    """
-    Initialize a fast playback device.
-
-    :param bits: The number of bits per sample.
-    :param chs: The number of channels.
-    :param rate: The sample rate.
-    :param bfmt: The byte format.
-    :param matrix: The channel matrix.
-    """
-    return _aointernal.pyao_fast_play_init(bits, chs, rate, bfmt, matrix)
-
-
-def pyao_fast_play_close() -> None:
-    """
-    Close a fast playback device.
-    """
-    _aointernal.pyao_fast_play_close()
-
-
-def pyao_fast_play(data: bytes) -> int:
-    """
-    Play a buffer on a fast playback device.
-
-    :param data: The audio data.
-
-    :return: Status code.
-    """
-    return _aointernal.pyao_fast_play(data)
 
 
 class AODevice:
     """
     An abstract object to mark ao_device
     """
-    def __init__(self, st: int):
+    def __init__(self, st: int, fmt: AOFormat):
         """
         :param st: The audio device descriptor.
+        :param fmt: The audio format.
         """
         self._struct = st
+        self.format = fmt
 
     def __del__(self):
         self.close()
+        super().__del__()  # type: ignore
 
     def __enter__(self):
         return self
@@ -165,7 +131,7 @@ class AODevice:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
-    def play(self, data: bytes) -> int:
+    def play(self, data: bytes):
         """
         Play audio data.
 
@@ -173,29 +139,14 @@ class AODevice:
 
         :return: Status code.
         """
-        return pyao_play(self._struct, data)
+        pyao_play(self._struct, data)
 
-    def close(self) -> int:
+    def close(self):
         """
         Close the audio device.
-
-        :return: Status code.
         """
         # Disabled due to some error.
         # return pyao_close(self._struct)
-        return 0
-
-
-@dataclass
-class AOFormat:
-    """
-    An abstract object to mark ao_sample_format
-    """
-    bits: int
-    rate: int
-    channels: int
-    byte_format: int
-    mat: str
 
 
 class AO:
@@ -209,14 +160,15 @@ class AO:
     ) -> AODevice:
         """
         Open a live audio stream.
+
+        :param driver: The audio driver ID.
+        :param format: The audio format.
         """
         if driver is None:
             driver = pyao_default_driver_id()
         if format is None:
-            format = AOFormat(16, 44100, 2, AO_FMT_NATIVE, "L,R")
-        return AODevice(pyao_open_live(
-            driver, format.bits, format.channels, format.rate, format.byte_format, format.mat
-        ))
+            format = presets.FMT_B16C2R44100LE
+        return AODevice(pyao_open_live(driver, format), format)
 
     @staticmethod
     def open_file(
@@ -227,15 +179,18 @@ class AO:
     ) -> AODevice:
         """
         Open a file audio stream.
+
+        :param driver: The audio driver ID.
+        :param file: The file path.
+        :param format: The audio format.
+        :param overwrite: Whether to overwrite the file if it exists.
         """
         if driver is None:
             driver = pyao_default_driver_id()
         if format is None:
-            format = AOFormat(16, 44100, 2, AO_FMT_NATIVE, "L,R")
+            format = presets.FMT_B16C2R44100LE
         if file is None:
-            raise RuntimeError("No file specified.")
+            raise ValueError("No file specified.")
         if overwrite is None:
             overwrite = False
-        return AODevice(pyao_open_file(
-            driver, file, format.bits, format.channels, format.rate, format.byte_format, format.mat, int(overwrite)
-        ))
+        return AODevice(pyao_open_file(driver, file, format, overwrite), format)
