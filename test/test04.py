@@ -60,7 +60,9 @@ with pyao.AO.open_live(
         (261.6, 1.0),  # C4
     ]:
         print(freq, dura)
-        # play_square(freq, dura, 0.75)
-        player.play(pyao.wave.gen_sine(pyao.presets.FMT_B16C2R44100LE, freq, dura))
+        try:
+            player.play(pyao.wave.gen_sine(pyao.presets.FMT_B16C2R44100LE, freq, dura))
+        except Exception:
+            pass
 
 pyao.pyao_shutdown()
