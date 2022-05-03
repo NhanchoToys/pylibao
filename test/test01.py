@@ -6,7 +6,7 @@ import pyao
 
 pyao.init()
 
-live = pyao.AO.open_live(
+live = pyao.open(
     pyao.get_default_driver_id(),
     pyao.AOFormat(
         bits=16,

@@ -133,29 +133,6 @@ static PyObject* pyao_open_live(PyObject* self, PyObject* args, PyObject* kwargs
     return Py_BuildValue("i", d_index);
 }
 
-static PyObject* pyao_open_file(PyObject* self, PyObject* args, PyObject* kwargs) {
-    int drvid, ow = 0;
-    static ao_device* device;
-    ao_sample_format aofmt;
-    memset(&aofmt, 0, sizeof(aofmt));
-    char* filename;
-
-    static char* argsname[] = {"driver", "filename", "bits", "chs", "rate", "bfmt", "matrix", "overwrite", NULL};
-    if (!PyArg_ParseTupleAndKeywords(
-                args, kwargs, "isiiiisi:pyao_open_file", argsname,
-                &drvid, &filename, &aofmt.bits, &aofmt.channels, &aofmt.rate, &aofmt.byte_format, &aofmt.matrix, &ow
-                ))
-        return NULL;
-
-    device = ao_open_file(drvid, filename, ow, &aofmt, NULL);
-    if (device == NULL) {
-        PyErr_SetString(PyExc_OSError, "Unable to open an audio device");
-        return NULL;
-    }
-    int d_index = add_ao_device(device);
-    return Py_BuildValue("i", d_index);
-}
-
 static PyObject* pyao_close(PyObject* self, PyObject* args) {
     int d_index;
     if (!PyArg_ParseTuple(args, "i:pyao_close", &d_index))
@@ -305,7 +282,6 @@ static PyMethodDef _methods[] = {
     {"pyao_shutdown",           (PyCFunction)pyao_shutdown,             METH_NOARGS,                    "pyao_shutdown()\n--\n\nShutdown the audio library."},
     {"pyao_default_driver_id",  (PyCFunction)pyao_default_driver_id,    METH_NOARGS,                    "pyao_default_driver_id()\n--\n\nGet the default audio driver ID."},
     {"pyao_open_live",          (PyCFunction)pyao_open_live,            METH_VARARGS | METH_KEYWORDS,   "pyao_open_live(driver, bits, chs, rate, bfmt, matrix)\n--\n\nOpen an audio device for live playback."},
-    {"pyao_open_file",          (PyCFunction)pyao_open_file,            METH_VARARGS | METH_KEYWORDS,   "pyao_open_file(driver, filename, bits, chs, rate, bfmt, matrix, overwrite)\n--\n\nOpen an audio device for file playback."},
     {"pyao_close",              (PyCFunction)pyao_close,                METH_VARARGS,                   "pyao_close(device)\n--\n\nClose an audio device."},
     {"pyao_play",               (PyCFunction)pyao_play,                 METH_VARARGS | METH_KEYWORDS,   "pyao_play(device, data)\n--\n\nPlay a buffer on an audio device."},
     {"pyao_gen_sine",           (PyCFunction)pyao_gen_sine,             METH_VARARGS | METH_KEYWORDS,   "pyao_gen_sine(bits, chs, rate, bfmt, freq, volume, duration)\n--\n\nGenerate a sine wave."},

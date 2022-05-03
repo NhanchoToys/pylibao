@@ -7,7 +7,7 @@ import wave
 
 pyao.init()
 
-with pyao.AO.open_live(
+with pyao.open(
     pyao.get_default_driver_id(),
     pyao.presets.FMT_B16C2R44100LE
 ) as player:

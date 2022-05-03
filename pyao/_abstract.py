@@ -3,7 +3,7 @@ An abstract interface for libao.
 """
 
 from dataclasses import dataclass
-from typing import NoReturn, Optional, Union
+from typing import NoReturn, Union
 from pyao import _aointernal
 
 
@@ -78,26 +78,6 @@ def pyao_open_live(driver: int, fmt: AOFormat) -> int:
     )
 
 
-def pyao_open_file(
-    driver: int, file: str, fmt: AOFormat, overwrite: bool = False
-) -> int:
-    """
-    Open a file audio stream.
-
-    :param driver: The audio driver ID.
-    :param file: The file path.
-    :param fmt: The audio format.
-    :param overwrite: Overwrite the file if it exists.
-
-    :return: The audio device descriptor.
-    """
-    return _aointernal.pyao_open_file(
-        driver, file,
-        fmt.bits, fmt.channels, fmt.rate, fmt.byte_format, fmt.mat,
-        int(overwrite)
-    )
-
-
 def pyao_close(stream: int) -> Union[None, NoReturn]:
     """
     Close an audio stream.
@@ -159,43 +139,17 @@ class AODevice:
         # return pyao_close(self._struct)
 
 
-class AO:
+
+def open(
+    driver: int,
+    format: AOFormat
+) -> AODevice:
     """
-    An abstract interface for libao.
+    Open a live audio stream.
+
+    :param driver: The audio driver ID.
+    :param format: The audio format.
     """
-    @staticmethod
-    def open_live(
-        driver: int,
-        format: AOFormat
-    ) -> AODevice:
-        """
-        Open a live audio stream.
-
-        :param driver: The audio driver ID.
-        :param format: The audio format.
-        """
-        if not isinstance(format, AOFormat):
-            raise ValueError("Invalid format.")
-        return AODevice(pyao_open_live(driver, format), format)
-
-    @staticmethod
-    def open_file(
-        driver: int,
-        format: AOFormat,
-        file: str,
-        overwrite: bool = False
-    ) -> AODevice:
-        """
-        Open a file audio stream.
-
-        :param driver: The audio driver ID.
-        :param format: The audio format.
-        :param file: The file path.
-        :param overwrite: Whether to overwrite the file if it exists.
-        """
-        if not isinstance(format, AOFormat):
-            raise ValueError("Invalid format.")
-        return AODevice(
-            pyao_open_file(driver, file, format, overwrite),
-            format
-        )
+    if not isinstance(format, AOFormat):
+        raise ValueError("Invalid format.")
+    return AODevice(pyao_open_live(driver, format), format)
