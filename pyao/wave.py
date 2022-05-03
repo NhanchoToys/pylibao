@@ -7,7 +7,7 @@ from pyao._aointernal import (
     pyao_gen_sine,
     pyao_gen_square,
     pyao_gen_triangle,
-    pyao_gen_saw
+    pyao_gen_sawtooth
 )
 
 
@@ -30,10 +30,10 @@ def gen_triangle(fmt: AOFormat, freq: float, duration: float, volume: float = 1.
     Generate a triangle wave.
     """
     return pyao_gen_triangle(fmt.bits, fmt.channels, fmt.rate, fmt.byte_format, freq, volume, duration)
-    
+
 
 def gen_sawtooth(fmt: AOFormat, freq: float, duration: float, volume: float = 1.0) -> bytes:
     """
     Generate a sawtooth wave.
     """
-    return pyao_gen_saw(fmt.bits, fmt.channels, fmt.rate, fmt.byte_format, freq, volume, duration)
+    return pyao_gen_sawtooth(fmt.bits, fmt.channels, fmt.rate, fmt.byte_format, freq, volume, duration)
