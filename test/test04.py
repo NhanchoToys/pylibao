@@ -4,10 +4,10 @@ pyao test module 04.
 
 import pyao
 
-pyao.pyao_init()
+pyao.init()
 
 with pyao.AO.open_live(
-    pyao.default_driver_id(),
+    pyao.get_default_driver_id(),
     pyao.presets.FMT_B16C2R44100LE
 ) as player:
     for freq, dura in [
@@ -62,4 +62,4 @@ with pyao.AO.open_live(
         print(freq, dura)
         player.play(pyao.wave.gen_sine(pyao.presets.FMT_B16C2R44100LE, freq, dura))
 
-pyao.pyao_shutdown()
+pyao.shutdown()

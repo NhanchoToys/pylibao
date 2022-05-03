@@ -4,10 +4,10 @@ pyao test module 01.
 
 import pyao
 
-pyao.pyao_init()
+pyao.init()
 
 live = pyao.AO.open_live(
-    pyao.default_driver_id(),
+    pyao.get_default_driver_id(),
     pyao.AOFormat(
         bits=16,
         rate=44100,
@@ -21,4 +21,4 @@ live.play(b"\x00\x00\xff\xff\x00\x00\xff\xff")
 
 # live.close()
 
-pyao.pyao_shutdown()
+pyao.shutdown()
