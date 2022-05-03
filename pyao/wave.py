@@ -36,4 +36,5 @@ def gen_sawtooth(fmt: AOFormat, freq: float, duration: float, volume: float = 1.
     """
     Generate a sawtooth wave.
     """
+    raise NotImplementedError
     return pyao_gen_sawtooth(fmt.bits, fmt.channels, fmt.rate, fmt.byte_format, freq, volume, duration)
