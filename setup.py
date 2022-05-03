@@ -12,7 +12,7 @@ ext = Extension(
 )
 
 setup(
-    name='pyao',
+    name='pylibao',
     version='0.1.0',
     description='Python libao interface',
     author='HivertMoZara',
