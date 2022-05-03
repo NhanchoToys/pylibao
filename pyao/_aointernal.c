@@ -171,14 +171,14 @@ static PyObject* pyao_close(PyObject* self, PyObject* args) {
 static PyObject* pyao_play(PyObject* self, PyObject* args, PyObject* kwargs) {
     int device;
     char* bytes;
-    uint_32 size;
+    Py_ssize_t len;
 
     static char* argsname[] = {"device", "data", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "iy#:pyao_play", argsname, &device, &bytes, &size))
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "iy#:pyao_play", argsname, &device, &bytes, &len))
         return NULL;
 
     ao_device* _device = ao_device_list[device];
-    int code = ao_play(_device, bytes, size);
+    int code = ao_play(_device, bytes, len);
     return Py_BuildValue("i", code);
 }
 
@@ -208,7 +208,7 @@ static PyObject* pyao_gen_sine(PyObject* self, PyObject* args, PyObject* kwargs)
 
     gen_sine(buf, bufsize, &aofmt, freq, volume, duration);
 
-    return Py_BuildValue("y#", buf, bufsize);
+    return Py_BuildValue("y#", buf, (Py_ssize_t)bufsize);
 }
 
 // generate square wave
@@ -237,7 +237,7 @@ static PyObject* pyao_gen_square(PyObject* self, PyObject* args, PyObject* kwarg
 
     gen_square(buf, bufsize, &aofmt, freq, volume, duration);
 
-    return Py_BuildValue("y#", buf, bufsize);
+    return Py_BuildValue("y#", buf, (Py_ssize_t)bufsize);
 }
 
 // generate triangle wave
@@ -266,7 +266,7 @@ static PyObject* pyao_gen_triangle(PyObject* self, PyObject* args, PyObject* kwa
 
     gen_triangle(buf, bufsize, &aofmt, freq, volume, duration);
 
-    return Py_BuildValue("y#", buf, bufsize);
+    return Py_BuildValue("y#", buf, (Py_ssize_t)bufsize);
 }
 
 // generate sawtooth wave
@@ -295,7 +295,7 @@ PyObject* pyao_gen_sawtooth(PyObject* self, PyObject* args, PyObject* kwargs) {
 
     gen_saw(buf, bufsize, &aofmt, freq, volume, duration);
 
-    return Py_BuildValue("y#", buf, bufsize);
+    return Py_BuildValue("y#", buf, (Py_ssize_t)bufsize);
 }
 
 static PyMethodDef _methods[] = {
