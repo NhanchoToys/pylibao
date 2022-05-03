@@ -63,6 +63,42 @@ void gen_square(char* buf, uint32_t bufsize, ao_sample_format* aofmt, double fre
     }
 }
 
+void gen_triangle(char* buf, uint32_t bufsize, ao_sample_format* aofmt, double freq, double volume, double duration) {
+    for (uint32_t i = 0; i < (uint32_t)(aofmt->rate * duration); i++) {
+        double t = (double)i / aofmt->rate;
+        int sample = (int)(volume * 32768 * (2 * fabs(sin(2 * M_PI * freq * t)) - 1));
+        if (aofmt->byte_format == AO_FMT_LITTLE) {
+            buf[i * aofmt->channels * aofmt->bits / 8] = sample & 0xFF;
+            buf[i * aofmt->channels * aofmt->bits / 8 + 1] = (sample >> 8) & 0xFF;
+            buf[i * aofmt->channels * aofmt->bits / 8 + 2] = sample & 0xFF;
+            buf[i * aofmt->channels * aofmt->bits / 8 + 3] = (sample >> 8) & 0xFF;
+        } else if (aofmt->byte_format == AO_FMT_BIG) {
+            buf[i * aofmt->channels * aofmt->bits / 8] = (sample >> 8) & 0xFF;
+            buf[i * aofmt->channels * aofmt->bits / 8 + 1] = sample & 0xFF;
+            buf[i * aofmt->channels * aofmt->bits / 8 + 2] = (sample >> 8) & 0xFF;
+            buf[i * aofmt->channels * aofmt->bits / 8 + 3] = sample & 0xFF;
+        }
+    }
+}
+
+void gen_saw(char* buf, uint32_t bufsize, ao_sample_format* aofmt, double freq, double volume, double duration) {
+    for (uint32_t i = 0; i < (uint32_t)(aofmt->rate * duration); i++) {
+        double t = (double)i / aofmt->rate;
+        int sample = (int)(volume * 32768 * (t / duration - sin(2 * M_PI * freq * t) / (2 * M_PI * freq * t)));
+        if (aofmt->byte_format == AO_FMT_LITTLE) {
+            buf[i * aofmt->channels * aofmt->bits / 8] = sample & 0xFF;
+            buf[i * aofmt->channels * aofmt->bits / 8 + 1] = (sample >> 8) & 0xFF;
+            buf[i * aofmt->channels * aofmt->bits / 8 + 2] = sample & 0xFF;
+            buf[i * aofmt->channels * aofmt->bits / 8 + 3] = (sample >> 8) & 0xFF;
+        } else if (aofmt->byte_format == AO_FMT_BIG) {
+            buf[i * aofmt->channels * aofmt->bits / 8] = (sample >> 8) & 0xFF;
+            buf[i * aofmt->channels * aofmt->bits / 8 + 1] = sample & 0xFF;
+            buf[i * aofmt->channels * aofmt->bits / 8 + 2] = (sample >> 8) & 0xFF;
+            buf[i * aofmt->channels * aofmt->bits / 8 + 3] = sample & 0xFF;
+        }
+    }
+}
+
 // add device into device list
 int add_ao_device(ao_device *device) {
     if (device == NULL) {
@@ -206,6 +242,66 @@ static PyObject* pyao_gen_square(PyObject* self, PyObject* args, PyObject* kwarg
     return Py_BuildValue("y#", buf, bufsize);
 }
 
+// generate triangle wave
+static PyObject* pyao_gen_triangle(PyObject* self, PyObject* args, PyObject* kwargs) {
+    int drvid = ao_default_driver_id();
+    double freq, volume, duration;
+    ao_sample_format aofmt;
+    memset(&aofmt, 0, sizeof(aofmt));
+
+    static char* argsname[] = {
+        "bits", "chs", "rate", "bfmt",
+        "freq", "volume", "duration", NULL // triangle
+    };
+    if (!PyArg_ParseTupleAndKeywords(
+        args, kwargs, "iiiiddd:pyao_fast_play_triangle", argsname,
+        &aofmt.bits, &aofmt.channels, &aofmt.rate, &aofmt.byte_format,
+        &freq, &volume, &duration
+    ))
+        return NULL;
+
+    uint32_t bufsize = aofmt.bits / 8 * aofmt.channels * aofmt.rate * duration;
+    char* buf = (char*)calloc(bufsize, sizeof(char));
+    if (buf == NULL) {
+        PyErr_SetString(PyExc_MemoryError, "Unable to allocate memory");
+        return NULL;
+    }
+
+    gen_triangle(buf, bufsize, &aofmt, freq, volume, duration);
+
+    return Py_BuildValue("y#", buf, bufsize);
+}
+
+// generate sawtooth wave
+PyObject* pyao_gen_sawtooth(PyObject* self, PyObject* args, PyObject* kwargs) {
+    int drvid = ao_default_driver_id();
+    double freq, volume, duration;
+    ao_sample_format aofmt;
+    memset(&aofmt, 0, sizeof(aofmt));
+
+    static char* argsname[] = {
+        "bits", "chs", "rate", "bfmt",
+        "freq", "volume", "duration", NULL // sawtooth
+    };
+    if (!PyArg_ParseTupleAndKeywords(
+        args, kwargs, "iiiiddd:pyao_fast_play_sawtooth", argsname,
+        &aofmt.bits, &aofmt.channels, &aofmt.rate, &aofmt.byte_format,
+        &freq, &volume, &duration
+    ))
+        return NULL;
+
+    uint32_t bufsize = aofmt.bits / 8 * aofmt.channels * aofmt.rate * duration;
+    char* buf = (char*)calloc(bufsize, sizeof(char));
+    if (buf == NULL) {
+        PyErr_SetString(PyExc_MemoryError, "Unable to allocate memory");
+        return NULL;
+    }
+
+    gen_saw(buf, bufsize, &aofmt, freq, volume, duration);
+
+    return Py_BuildValue("y#", buf, bufsize);
+}
+
 static PyMethodDef _methods[] = {
     {"pyao_init",               (PyCFunction)pyao_init,                 METH_NOARGS,                    "pyao_init()\n--\n\nInitialize the audio library."},
     {"pyao_shutdown",           (PyCFunction)pyao_shutdown,             METH_NOARGS,                    "pyao_shutdown()\n--\n\nShutdown the audio library."},
@@ -216,6 +312,8 @@ static PyMethodDef _methods[] = {
     {"pyao_play",               (PyCFunction)pyao_play,                 METH_VARARGS | METH_KEYWORDS,   "pyao_play(device, data)\n--\n\nPlay a buffer on an audio device."},
     {"pyao_gen_sine",           (PyCFunction)pyao_gen_sine,             METH_VARARGS | METH_KEYWORDS,   "pyao_gen_sine(bits, chs, rate, bfmt, freq, volume, duration)\n--\n\nGenerate a sine wave."},
     {"pyao_gen_square",         (PyCFunction)pyao_gen_square,           METH_VARARGS | METH_KEYWORDS,   "pyao_gen_square(bits, chs, rate, bfmt, freq, volume, duration)\n--\n\nGenerate a square wave."},
+    {"pyao_gen_triangle",       (PyCFunction)pyao_gen_triangle,         METH_VARARGS | METH_KEYWORDS,   "pyao_gen_triangle(bits, chs, rate, bfmt, freq, volume, duration)\n--\n\nGenerate a triangle wave."},
+    {"pyao_gen_sawtooth",       (PyCFunction)pyao_gen_sawtooth,         METH_VARARGS | METH_KEYWORDS,   "pyao_gen_sawtooth(bits, chs, rate, bfmt, freq, volume, duration)\n--\n\nGenerate a sawtooth wave."},
     {NULL,                      NULL,                                   0,                              NULL}
 };
 

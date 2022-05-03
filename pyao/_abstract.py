@@ -104,7 +104,7 @@ def pyao_close(stream: int) -> Union[None, NoReturn]:
 
     :param stream: The audio device descriptor.
     """
-    if _aointernal.pyao_close(stream):
+    if not _aointernal.pyao_close(stream):
         raise PlaybackError("Error closing audio stream.")
 
 
@@ -115,7 +115,7 @@ def pyao_play(stream: int, data: bytes) -> Union[None, NoReturn]:
     :param stream: The audio device descriptor.
     :param data: The audio data.
     """
-    if _aointernal.pyao_play(stream, data):
+    if not _aointernal.pyao_play(stream, data):
         raise PlaybackError("Error playing audio data.")
 
 
