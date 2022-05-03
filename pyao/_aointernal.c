@@ -66,7 +66,7 @@ void gen_square(char* buf, uint32_t bufsize, ao_sample_format* aofmt, double fre
 void gen_triangle(char* buf, uint32_t bufsize, ao_sample_format* aofmt, double freq, double volume, double duration) {
     for (uint32_t i = 0; i < (uint32_t)(aofmt->rate * duration); i++) {
         double t = (double)i / aofmt->rate;
-        int sample = (int)(volume * 32768 * (2 * fabs(sin(2 * M_PI * freq * t)) - 1));
+        int sample = (int)(volume * 32768 * (2 * fabs(sin(M_PI * freq * t)) - 1));
         if (aofmt->byte_format == AO_FMT_LITTLE) {
             buf[i * aofmt->channels * aofmt->bits / 8] = sample & 0xFF;
             buf[i * aofmt->channels * aofmt->bits / 8 + 1] = (sample >> 8) & 0xFF;
