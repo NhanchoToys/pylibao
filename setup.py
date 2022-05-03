@@ -15,7 +15,7 @@ setup(
     name='pyao',
     version='0.1.0',
     description='Python libao interface',
-    author='NCBM',
+    author='HivertMoZara',
     author_email='worldmozara@gmail.com',
     url='https://github.com/NCBM/pyao',
     packages=['pyao'],

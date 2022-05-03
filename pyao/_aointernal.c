@@ -184,7 +184,6 @@ static PyObject* pyao_play(PyObject* self, PyObject* args, PyObject* kwargs) {
 
 // generate sine wave
 static PyObject* pyao_gen_sine(PyObject* self, PyObject* args, PyObject* kwargs) {
-    int drvid = ao_default_driver_id();
     double freq, volume, duration;
     ao_sample_format aofmt;
     memset(&aofmt, 0, sizeof(aofmt));
@@ -214,7 +213,6 @@ static PyObject* pyao_gen_sine(PyObject* self, PyObject* args, PyObject* kwargs)
 
 // generate square wave
 static PyObject* pyao_gen_square(PyObject* self, PyObject* args, PyObject* kwargs) {
-    int drvid = ao_default_driver_id();
     double freq, volume, duration;
     ao_sample_format aofmt;
     memset(&aofmt, 0, sizeof(aofmt));
@@ -244,7 +242,6 @@ static PyObject* pyao_gen_square(PyObject* self, PyObject* args, PyObject* kwarg
 
 // generate triangle wave
 static PyObject* pyao_gen_triangle(PyObject* self, PyObject* args, PyObject* kwargs) {
-    int drvid = ao_default_driver_id();
     double freq, volume, duration;
     ao_sample_format aofmt;
     memset(&aofmt, 0, sizeof(aofmt));
@@ -274,7 +271,6 @@ static PyObject* pyao_gen_triangle(PyObject* self, PyObject* args, PyObject* kwa
 
 // generate sawtooth wave
 PyObject* pyao_gen_sawtooth(PyObject* self, PyObject* args, PyObject* kwargs) {
-    int drvid = ao_default_driver_id();
     double freq, volume, duration;
     ao_sample_format aofmt;
     memset(&aofmt, 0, sizeof(aofmt));
