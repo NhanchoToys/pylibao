@@ -2,7 +2,7 @@
 Presets for pyao.
 """
 
-from pyao import AOFormat, AO_FMT_LITTLE, AO_FMT_BIG
+from pyao._abstract import AOFormat, AO_FMT_LITTLE, AO_FMT_BIG
 
 FMT_B16C2R44100LE = AOFormat(
     bits=16,

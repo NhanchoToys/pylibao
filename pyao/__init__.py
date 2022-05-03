@@ -3,7 +3,6 @@ Python libao interface.
 """
 
 __all__ = [
-    '_aointernal',
     'presets',
     'wave',
     'PlaybackError',
@@ -18,7 +17,6 @@ __all__ = [
     'AO_FMT_BIG'
 ]
 
-from pyao import _aointernal
 from pyao._abstract import (
     PlaybackError,
     AODevice,
