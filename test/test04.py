@@ -60,9 +60,6 @@ with pyao.AO.open_live(
         (261.6, 1.0),  # C4
     ]:
         print(freq, dura)
-        try:
-            player.play(pyao.wave.gen_sine(pyao.presets.FMT_B16C2R44100LE, freq, dura))
-        except Exception:
-            pass
+        player.play(pyao.wave.gen_sine(pyao.presets.FMT_B16C2R44100LE, freq, dura))
 
 pyao.pyao_shutdown()
