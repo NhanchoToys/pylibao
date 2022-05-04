@@ -1,5 +1,7 @@
 """
 pyao test module 02.
+
+Play with context manager.
 """
 
 import pyao

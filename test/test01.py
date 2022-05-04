@@ -1,5 +1,7 @@
 """
 pyao test module 01.
+
+Basic procedure.
 """
 
 import pyao

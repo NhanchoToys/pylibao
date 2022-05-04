@@ -149,6 +149,8 @@ def open(
 
     :param driver: The audio driver ID.
     :param format: The audio format.
+
+    :return: The audio device.
     """
     if not isinstance(format, AOFormat):
         raise ValueError("Invalid format.")

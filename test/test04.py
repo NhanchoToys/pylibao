@@ -1,5 +1,7 @@
 """
 pyao test module 04.
+
+Play Twinkle Twinkle Little Star.
 """
 
 import pyao

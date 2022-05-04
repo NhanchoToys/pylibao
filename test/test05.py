@@ -1,5 +1,7 @@
 """
 pyao test module 05.
+
+Play test.wav.
 """
 
 import pyao

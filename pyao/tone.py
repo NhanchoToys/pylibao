@@ -21,7 +21,7 @@ class Tone:
     @staticmethod
     def to_cent(f0: float, freq: float) -> float:
         """
-        Return the cents of a note.
+        Return the cents between two frequencies.
         """
         return 1200 * log2(freq / f0)
 
