@@ -62,6 +62,6 @@ with pyao.open(
         (261.6, 1.0),  # C4
     ]:
         print(freq, dura)
-        player.play(pyao.wave.gen_sine(pyao.presets.FMT_B16C2R44100LE, freq, dura))
+        player.play(pyao.wave.gen_sawtooth(pyao.presets.FMT_B16C2R44100LE, freq, dura))
 
 pyao.shutdown()

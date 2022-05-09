@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ao/ao.h>
+#include <math.h>
 
 // ao_device descriptor
 static ao_device** ao_device_list = NULL;
@@ -86,7 +87,7 @@ void gen_triangle(char* buf, uint32_t bufsize, ao_sample_format* aofmt, double f
 void gen_saw(char* buf, uint32_t bufsize, ao_sample_format* aofmt, double freq, double volume, double duration) {
     for (uint32_t i = 0; i < (uint32_t)(aofmt->rate * duration); i++) {
         double t = (double)i / aofmt->rate;
-        int sample = (int)(volume * 32768 * (t / duration - sin(2 * M_PI * freq * t) / (2 * M_PI * freq * t)));
+        int sample = (int)(volume * 32768 * (i % aofmt->rate) / aofmt->rate * freq);
         if (aofmt->byte_format == AO_FMT_LITTLE) {
             buf[i * aofmt->channels * aofmt->bits / 8] = sample & 0xFF;
             buf[i * aofmt->channels * aofmt->bits / 8 + 1] = (sample >> 8) & 0xFF;
