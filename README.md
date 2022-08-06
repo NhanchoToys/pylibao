@@ -1,4 +1,8 @@
 # pyao
+[![Python Version](https://img.shields.io/badge/python-3.6%2B-blue)](https://github.com/NCBM/pyao/releases)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![PyPI - Version](https://img.shields.io/pypi/v/pylibao)](https://pypi.org/project/pylibao/)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/pylibao)](https://pypi.org/project/pylibao/)
 
 Python libao interface.
 
