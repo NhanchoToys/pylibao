@@ -6,8 +6,6 @@ Basic procedure.
 
 import pyao
 
-pyao.init()
-
 live = pyao.open(
     pyao.get_default_driver_id(),
     pyao.AOFormat(
@@ -21,6 +19,4 @@ live = pyao.open(
 
 live.play(b"\x00\x00\xff\xff\x00\x00\xff\xff")
 
-# live.close()
-
-pyao.shutdown()
+# live.close()  # commented as it causes an error

@@ -6,8 +6,6 @@ Play Twinkle Twinkle Little Star.
 
 import pyao
 
-pyao.init()
-
 with pyao.open(
     pyao.get_default_driver_id(),
     pyao.presets.FMT_B16C2R44100LE
@@ -63,5 +61,3 @@ with pyao.open(
     ]:
         print(freq, dura)
         player.play(pyao.wave.gen_sawtooth(pyao.presets.FMT_B16C2R44100LE, freq, dura))
-
-pyao.shutdown()
