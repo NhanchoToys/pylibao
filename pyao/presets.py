@@ -15,7 +15,7 @@ def get_format_from_string(s: str, matrix: str = "L,R") -> AOFormat:
 
     :return: AOFormat
     """
-    exp = re.compile(r"^[Bb](?P<bits>\d+)[Cc](?P<channels>\d+)[Rr](?P<rate>\d+)[Ll](?P<byte_format>[LB])E?$")
+    exp = re.compile(r"^[Bb](?P<bits>\d+)[Cc](?P<channels>\d+)[Rr](?P<rate>\d+)(?P<byte_format>[LB])E?$")
     m = exp.match(s)
 
     def err_invalid_format():
