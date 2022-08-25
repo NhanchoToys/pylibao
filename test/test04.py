@@ -8,7 +8,7 @@ import pyao
 
 with pyao.open(
     pyao.get_default_driver_id(),
-    pyao.presets.FMT_B16C2R44100LE
+    pyao.preset.B16C2R44100LE
 ) as player:
     for freq, dura in [
         (261.6, 0.5),  # C4
