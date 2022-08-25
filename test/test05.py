@@ -9,7 +9,7 @@ import wave
 
 with pyao.open(
     pyao.get_default_driver_id(),
-    pyao.presets.FMT_B16C2R44100LE
+    pyao.preset.B16C2R44100LE
 ) as player:
     with wave.open("test.wav", "rb") as f:
         for i in range(f.getnframes() // 48 + 1):

@@ -29,9 +29,16 @@ from pyao._abstract import (
     AO_FMT_LITTLE,
     AO_FMT_BIG
 )
-from pyao import presets, wave
+from pyao import presets as _presets, wave
 
 import atexit
 
 init()
 atexit.register(shutdown)
+
+
+class _preset:
+    __getattribute__ = lambda self, attr: _presets.get_format_from_string(attr)
+
+
+preset = _preset()
