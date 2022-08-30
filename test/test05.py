@@ -7,7 +7,7 @@ Play test.wav.
 import pyao
 import wave
 
-with pyao.open(
+with pyao.Device.live(
     pyao.get_default_driver_id(),
     pyao.preset.B16C2R44100LE
 ) as player:

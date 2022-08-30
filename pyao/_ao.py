@@ -2,7 +2,7 @@
 An abstract interface for libao.
 """
 
-from ctypes import CDLL, POINTER, Structure, c_char_p, c_int, c_uint32
+from ctypes import CDLL, POINTER, Structure, byref, c_char_p, c_int, c_uint32
 from ctypes.util import find_library
 from typing import NoReturn, Optional, Union
 
@@ -169,7 +169,7 @@ def gen_option(**kwargs: str):
         if not head:
             head = opt
         if prev:
-            prev.next = opt
+            prev.next = byref(opt)
         else:
             prev = opt
     if head is None:

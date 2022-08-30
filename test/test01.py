@@ -6,17 +6,12 @@ Basic procedure.
 
 import pyao
 
-live = pyao.open(
+live = pyao.Device.live(
     pyao.get_default_driver_id(),
-    pyao.AOFormat(
-        bits=16,
-        rate=44100,
-        channels=2,
-        byte_format=pyao.AO_FMT_NATIVE,
-        mat="L,R"
-    )
+    pyao.preset.b16c2r44100L
 )
 
-live.play(b"\x00\x00\xff\xff\x00\x00\xff\xff")
+for _ in range(1048576):
+    live.play(b"\x00\x00\xff\xff\x00\x00\xff\xff")
 
-# live.close()  # commented as it causes an error
+live.close()  # commented as it causes an error
