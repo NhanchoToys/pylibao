@@ -92,7 +92,7 @@ class Device:
     def live(
         driver: int, format: ao_sample_format, option: ao_option = ao_option()
     ) -> "Device":
-        return Device(_ao.open_live(driver, byref(format), byref(option)))
+        return Device(_ao.open_live(driver, byref(format), None))
 
     @staticmethod
     def file(
@@ -100,7 +100,7 @@ class Device:
         overwrite: bool = False, option: ao_option = ao_option()
     ) -> "Device":
         return Device(
-            _ao.open_file(driver, fp, overwrite, byref(format), byref(option))
+            _ao.open_file(driver, fp, overwrite, byref(format), None)
         )
 
     def play(self, data: bytes):
