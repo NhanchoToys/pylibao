@@ -3,17 +3,17 @@ Presets for pyao.
 """
 
 import re
-from pyao._abstract import AOFormat, AO_FMT_LITTLE, AO_FMT_BIG
+from pyao._ao import ao_sample_format, AO_FMT_LITTLE, AO_FMT_BIG
 
 
-def get_format_from_string(s: str, matrix: str = "L,R") -> AOFormat:
+def get_format_from_string(s: str, matrix: str = "L,R") -> ao_sample_format:
     """
-    Get AOFormat from string.
+    Get ao_sample_format from string.
 
     :param s: format string
     :param matrix: channel matrix
 
-    :return: AOFormat
+    :return: ao_sample_format
     """
     exp = re.compile(r"^[Bb](?P<bits>\d+)[Cc](?P<channels>\d+)[Rr](?P<rate>\d+)(?P<byte_format>[LB])E?$")
     m = exp.match(s)
@@ -24,10 +24,10 @@ def get_format_from_string(s: str, matrix: str = "L,R") -> AOFormat:
     if m is None:
         err_invalid_format()
 
-    return AOFormat(
-        bits=int(m.group("bits")),
-        channels=int(m.group("channels")),
-        rate=int(m.group("rate")),
-        byte_format=AO_FMT_LITTLE if m.group("byte_format") == "L" else AO_FMT_BIG if m.group("byte_format") == "B" else err_invalid_format(),
-        mat=matrix
+    return ao_sample_format(
+        int(m.group("bits")),
+        int(m.group("channels")),
+        int(m.group("rate")),
+        AO_FMT_LITTLE if m.group("byte_format") == "L" else AO_FMT_BIG if m.group("byte_format") == "B" else err_invalid_format(),
+        matrix
     )
