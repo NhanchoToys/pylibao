@@ -66,7 +66,7 @@ def get_format_from_string(s: str, matrix: str = "L,R") -> ao_sample_format:
         int(m.group("rate")),
         AO_FMT_LITTLE if m.group("byte_format") == "L" else AO_FMT_BIG
         if m.group("byte_format") == "B" else err_invalid_format(),
-        matrix
+        matrix.encode()
     )
 
 
