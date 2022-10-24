@@ -5,10 +5,10 @@ Python libao interface.
 __all__ = [
     'PlaybackError',
     'ao_sample_format',
-    'ao_option',
     'init',
     'shutdown',
     'get_default_driver_id',
+    'get_driver_id',
     'AO_FMT_NATIVE',
     'AO_FMT_LITTLE',
     'AO_FMT_BIG',
@@ -16,16 +16,16 @@ __all__ = [
     'AO_TYPE_FILE'
 ]
 
-from ctypes import byref
+from ctypes import pointer
 import re
 import pyao._ao as _ao
 from pyao._ao import (
     PlaybackError,
     ao_sample_format,
-    ao_option,
     initialize as init,
     shutdown,
     get_default_driver_id,
+    driver_id as _driver_id,
     AO_FMT_NATIVE,
     AO_FMT_LITTLE,
     AO_FMT_BIG,
@@ -62,11 +62,11 @@ def get_format_from_string(s: str, matrix: str = "L,R") -> ao_sample_format:
 
     return ao_sample_format(
         int(m.group("bits")),
-        int(m.group("channels")),
         int(m.group("rate")),
+        int(m.group("channels")),
         AO_FMT_LITTLE if m.group("byte_format") == "L" else AO_FMT_BIG
         if m.group("byte_format") == "B" else err_invalid_format(),
-        matrix.encode()
+        matrix
     )
 
 
@@ -88,20 +88,9 @@ class Device:
     def __exit__(self, *_):
         self.close()
 
-    @staticmethod
-    def live(
-        driver: int, format: ao_sample_format, option: ao_option = ao_option()
-    ) -> "Device":
-        return Device(_ao.open_live(driver, byref(format), None))
-
-    @staticmethod
-    def file(
-        driver: int, format: ao_sample_format, fp: str,
-        overwrite: bool = False, option: ao_option = ao_option()
-    ) -> "Device":
-        return Device(
-            _ao.open_file(driver, fp, overwrite, byref(format), None)
-        )
+    @classmethod
+    def open(cls, driver: int, format: ao_sample_format) -> "Device":
+        return cls(_ao.open_live(driver, format.bits, format.rate, format.channels, format.byte_format, format.matrix))
 
     def play(self, data: bytes):
         c = _ao.play(self.device, data, len(data))
@@ -109,6 +98,10 @@ class Device:
             raise PlaybackError("Failed to play data.")
 
     def close(self):
-        c = _ao.close(self.device)
-        if c == 0:
-            raise PlaybackError("Failed to close device.")
+        _ao.close(self.device)
+        # if c == 0:
+        #     raise PlaybackError("Failed to close device.")
+
+
+def get_driver_id(name: str) -> int:
+    return _driver_id(name.encode())

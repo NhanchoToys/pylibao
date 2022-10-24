@@ -6,7 +6,7 @@ Basic procedure.
 
 import pyao
 
-live = pyao.Device.live(
+live = pyao.Device.open(
     pyao.get_default_driver_id(),
     pyao.preset.b16c2r44100L
 )
