@@ -16,7 +16,6 @@ __all__ = [
     'AO_TYPE_FILE'
 ]
 
-from ctypes import pointer
 import re
 import pyao._ao as _ao
 from pyao._ao import (
