@@ -88,6 +88,8 @@ shutdown = libao.ao_shutdown
 append_global_option = libao.ao_append_global_option
 append_global_option.argtypes = [c_char_p, c_char_p]
 
+# as ao_open_live doesn't work well with ctypes, it has been moved to `pyao/_ao_c.c`
+
 # driver information
 driver_id = libao.ao_driver_id
 driver_id.argtypes = [c_char_p]
