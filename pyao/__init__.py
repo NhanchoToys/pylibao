@@ -93,7 +93,7 @@ class Device:
         return cls(_ao.open_live(driver, format.bits, format.rate, format.channels, format.byte_format, format.matrix))
 
     def play(self, data: bytes):
-        c = _ao.play(self.device, data, len(data))
+        c = _ao.play(self.device, data)
         if c == 0:
             raise PlaybackError("Failed to play data.")
 
